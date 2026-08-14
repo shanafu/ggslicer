@@ -1,0 +1,28 @@
+Package: ggslicer
+Title: Prepare Volumetric Imaging Data
+Version: 0.0.0.9000
+Authors@R: c(
+    person("Shana", "Fu", email = "shana.fu@ucalgary.ca", role = c("aut", "cre")))
+Description: Functions that allow for efficient wrangling of imaging data into 
+    a data frame. An image file is provided, along with the desired image axis
+    and specific voxel coordinates to extract voxel and world coordinates, and 
+    intensity data at each coordinate.
+Imports:
+    dplyr,
+    magrittr,
+    pbapply,
+    rlang,
+    SimpleITK,
+    tools
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Suggests: 
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+VignetteBuilder: knitr
+URL: https://github.com/shanafu/ggslicerR
+BugReports: https://github.com/shanafu/ggslicerR/issues
