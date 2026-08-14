@@ -1,5 +1,5 @@
 
-# ggslicer
+# ggslicerR
 
 <!-- badges: start -->
 
