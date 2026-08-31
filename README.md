@@ -52,7 +52,7 @@ Finally, you can install the development version of ‘ggslicer’ in R by simpl
 running:
 
 ``` r
-pak::pak("shanafu/ggslicerR")
+pak::pak("shanafu/ggslicer")
 library(ggslicer)
 ```
 
