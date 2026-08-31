@@ -55,17 +55,3 @@ running:
 pak::pak("shanafu/ggslicer")
 library(ggslicer)
 ```
-
-## Example
-
-This is a basic example using the slice_axis() function in ‘ggslicer’:
-
-``` r
-library(ggslicer)
-
-file <- "~/path/to/test/file"
-
-coordinates_df <- slice_axis(file, "y", c(7.5, 88))
-view(coordinates_df)
-```
-
