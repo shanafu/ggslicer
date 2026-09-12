@@ -1,0 +1,11 @@
+bibentry(
+  bibtype = "Manual",
+  title   = "ggslicer: Prepare Volumetric Imaging Data",
+  author  = "Shana Fu",
+  year    = "2025",
+  url     = "https://github.com/shanafu/ggslicer"
+)
+
+# TODO: once the accompanying Aperture Neuro article is published, add a
+# second bibentry(bibtype = "Article", ...) here with its real volume,
+# number, pages, and doi.

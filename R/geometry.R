@@ -81,6 +81,8 @@
 #' `PixelSpacing`) or how a SimpleITK image stores its own
 #' origin/direction/spacing/size.
 #'
+#' @importFrom R6 R6Class
+#' @importFrom tibble tibble
 #' @export
 SliceGeometry <- R6::R6Class(
   "SliceGeometry",
