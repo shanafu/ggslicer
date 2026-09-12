@@ -24,4 +24,5 @@ coords <- slice_axis("brain_image.nii", "y", c(7.5, 88))
 
 # Then extract intensity values at those coordinates
 result <- slice_intensity("brain_image.nii", coords)}
+
 }

@@ -4,7 +4,7 @@
 \alias{slice_axis}
 \title{Extract voxel and world coordinates along specified slice}
 \usage{
-slice_axis(file, slice_orientation, slice_orientation_coords)
+slice_axis(file, slice_orientation, slice_orientation_coords = NULL)
 }
 \arguments{
 \item{file}{Path to an image file.}
