@@ -21,6 +21,8 @@
 #'
 #' @importFrom SimpleITK WriteImage
 WriteImage_fix <- function(image, output_file) {
+  check_sitk_image(image)
+
   # Check metadata
   original_file_type_meta <- image$HasMetaDataKey("OriginalFileType")
   was_original_minc <- F
