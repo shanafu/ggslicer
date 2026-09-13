@@ -25,6 +25,10 @@
 #' (no token equals a discrete name exactly).
 #'
 #' @return A character vector of names.
+#' @examples
+#' \dontrun{
+#' discrete_data_names()
+#' }
 #' @export
 discrete_data_names <- function() {
   c(
@@ -84,6 +88,13 @@ discrete_data_names <- function() {
 #'   and are sampled once, broadcasting across every combination.
 #' @return A tibble with columns `package`, any names in `extra_index`, `i`,
 #'   `j`, `k`, `x`, `y`, `z`, and one column per name in `images`.
+#' @examples
+#' \dontrun{
+#' image <- ReadImage_fix("brain_image.nii")
+#' mask <- ReadImage_fix("brainmask.nii.gz")
+#' geom <- SliceGeometry$from_image_axis(image, axis = "axial", coordinate = 0)
+#' df <- sample_images(geom, list(value = image, mask = mask))
+#' }
 #' @export
 sample_images <- function(geometry, images, interpolator = "sitkLinear",
                            interpolator_overrides = list(),
@@ -170,6 +181,11 @@ sample_images <- function(geometry, images, interpolator = "sitkLinear",
 #'   `axis` (each snapped to the nearest voxel plane, as in
 #'   `SliceGeometry$from_image_axis()`). Need not be evenly spaced.
 #' @return A new [SlicePackageSet].
+#' @examples
+#' \dontrun{
+#' image <- ReadImage_fix("brain_image.nii")
+#' pset <- build_slice_geometry(image, axis = "coronal", coordinate = c(-10, 0, 10))
+#' }
 #' @export
 build_slice_geometry <- function(image, axis, coordinate) {
   check_sitk_image(image)
@@ -227,6 +243,18 @@ build_slice_geometry <- function(image, axis, coordinate) {
 #'   used instead of `axis`/`coordinate` (e.g. for an oblique DICOM-derived
 #'   geometry). Must not be supplied together with `axis`/`coordinate`.
 #' @return A tibble; see [sample_images()].
+#' @examples
+#' \dontrun{
+#' # Axial slice at world z = 0, with a mask overlaid as an extra column
+#' # (sampled nearest-neighbor automatically, since "mask" is a discrete name)
+#' df <- slice_image(
+#'   "brain_image.nii", axis = "axial", coordinate = 0,
+#'   extra_images = list(mask = "brainmask.nii.gz")
+#' )
+#'
+#' library(ggplot2)
+#' ggplot(df, aes(x = x, y = y, fill = value)) + geom_raster()
+#' }
 #' @export
 slice_image <- function(image, axis = NULL, coordinate = NULL, extra_images = list(),
                          interpolator = "sitkLinear", interpolator_overrides = list(),

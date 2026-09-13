@@ -33,3 +33,13 @@ styling. This returns both as ready-made, composable layers to \code{+} onto
 a plot, rather than requiring the user to filter \code{part} and write the
 grouping expression themselves.
 }
+\examples{
+\dontrun{
+image <- ReadImage_fix("brain_image.nii")
+grid_df <- slice_grid(image, axis = "axial", coordinate = 0, spacing = 5)
+layers <- slice_grid_layers(grid_df)
+
+library(ggplot2)
+ggplot(grid_df, aes(x = x, y = y)) + layers$box + layers$grid
+}
+}

@@ -65,3 +65,9 @@ grid is pure geometry, computed entirely from the resolved
 functions, feeding \code{\link[=build_slice_geometry]{build_slice_geometry()}} when \code{geometry} isn't
 supplied directly.
 }
+\examples{
+\dontrun{
+image <- ReadImage_fix("brain_image.nii")
+grid_df <- slice_grid(image, axis = "axial", coordinate = 0, spacing = 5)
+}
+}

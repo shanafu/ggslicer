@@ -69,3 +69,13 @@ As with \code{\link[=slice_contours]{slice_contours()}}, contouring happens in l
 coordinates and is mapped to world coordinates via each slice's own
 \code{SliceGeometry}, so it works for oblique planes too.
 }
+\examples{
+\dontrun{
+atlas <- ReadImage_fix("annotation.nii.gz")
+boundaries <- slice_label_contours(atlas, axis = "axial", coordinate = 0, labels = c(10557, 187))
+
+library(ggplot2)
+ggplot(boundaries, aes(x = x, y = y, group = interaction(label, obj), color = factor(label))) +
+  geom_path()
+}
+}

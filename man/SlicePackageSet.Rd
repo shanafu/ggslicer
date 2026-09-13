@@ -54,6 +54,28 @@ than a named list. Packages are auto-named \code{"package_1"}, \code{"package_2"
 etc., in the order given; use \code{set_packages()}/\code{rename_package()}
 afterward for more meaningful names.
 }
+\examples{
+\dontrun{
+image <- ReadImage_fix("brain_image.nii")
+pset <- SlicePackageSet$from_orthogonal_triplet(image, list(x = 0, y = 0, z = 0))
+pset$get_package_names()
+}
+
+\dontrun{
+image <- ReadImage_fix("brain_image.nii")
+pset <- SlicePackageSet$from_orthogonal_triplet(
+  image, list(sagittal = 0, coronal = 0, axial = 0)
+)
+}
+\dontrun{
+base_slice <- SliceGeometry$new(
+  origin = c(-5, -5, 0), direction_i = c(1, 0, 0), direction_j = c(0, 1, 0),
+  spacing = c(1, 1), size = c(10, 10)
+)
+pkg <- SlicePackage$new(base_slice = base_slice, spacing_k = 1, size_k = 5)
+pset <- SlicePackageSet$from_slice_packages(pkg)
+}
+}
 \section{Methods}{
 \subsection{Public methods}{
   \itemize{

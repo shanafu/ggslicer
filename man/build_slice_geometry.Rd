@@ -36,3 +36,9 @@ represent uneven spacing) — auto-detected, not something the caller
 needs to specify.
 }
 }
+\examples{
+\dontrun{
+image <- ReadImage_fix("brain_image.nii")
+pset <- build_slice_geometry(image, axis = "coronal", coordinate = c(-10, 0, 10))
+}
+}

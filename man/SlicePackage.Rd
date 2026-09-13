@@ -63,6 +63,43 @@ Construct a \code{SlicePackage} spanning an entire 3D SimpleITK image along one
 of its axes, using the image's own resolution along that axis — the
 \code{SlicePackage} equivalent of \code{SliceGeometry$from_image_axis()}.
 }
+\examples{
+\dontrun{
+base_slice <- SliceGeometry$new(
+  origin = c(-5, -5, 0), direction_i = c(1, 0, 0), direction_j = c(0, 1, 0),
+  spacing = c(1, 1), size = c(10, 10)
+)
+pkg <- SlicePackage$new(base_slice = base_slice, spacing_k = 1, size_k = 5)
+pkg$get_size()
+}
+
+\dontrun{
+base_slice <- SliceGeometry$new(
+  origin = c(-5, -5, 0), direction_i = c(1, 0, 0), direction_j = c(0, 1, 0),
+  spacing = c(1, 1), size = c(10, 10)
+)
+pkg <- SlicePackage$from_extent_k(base_slice, extent_k = 10, size_k = 5)
+}
+\dontrun{
+center_slice <- SliceGeometry$new(
+  origin = c(-5, -5, 0), direction_i = c(1, 0, 0), direction_j = c(0, 1, 0),
+  spacing = c(1, 1), size = c(10, 10)
+)
+pkg <- SlicePackage$from_center_k(center_slice, spacing_k = 1, size_k = 5)
+}
+\dontrun{
+slice1 <- SliceGeometry$new(
+  origin = c(0, 0, 0), direction_i = c(1, 0, 0), direction_j = c(0, 1, 0),
+  spacing = c(1, 1), size = c(10, 10)
+)
+slice2 <- slice1$translate(c(0, 0, 1))
+pkg <- SlicePackage$from_slices(list(slice1, slice2))
+}
+\dontrun{
+image <- ReadImage_fix("brain_image.nii")
+pkg <- SlicePackage$from_image_axis(image, axis = "axial")
+}
+}
 \section{Methods}{
 \subsection{Public methods}{
   \itemize{

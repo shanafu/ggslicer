@@ -17,8 +17,14 @@ check_sitk_image(image, arg_name = "image")
 \description{
 Gives a specifically helpful error if the caller passed a file path
 instead (an easy mistake: several functions elsewhere in this package,
-e.g. \code{slice_axis()}/\code{ReadImage_fix()}, take a path and read it
-internally, but the functions that call this validator expect an
-already-loaded image).
+e.g. \code{ReadImage_fix()}, take a path and read it internally, but the
+functions that call this validator expect an already-loaded image).
+}
+\examples{
+\dontrun{
+image <- ReadImage_fix("brain_image.nii")
+check_sitk_image(image) # TRUE, invisibly
+check_sitk_image("brain_image.nii") # errors with a clear message
+}
 }
 \keyword{internal}

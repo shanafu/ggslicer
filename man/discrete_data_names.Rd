@@ -19,3 +19,8 @@ on runs of non-alphanumeric characters), case-insensitively — so
 \code{"brain_mask"} matches (token \code{"mask"}) but \code{"landmasking_score"} does not
 (no token equals a discrete name exactly).
 }
+\examples{
+\dontrun{
+discrete_data_names()
+}
+}

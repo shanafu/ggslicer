@@ -68,3 +68,17 @@ then mapped to world coordinates via that slice's \code{SliceGeometry}, so
 (unlike the legacy \code{ggslicer} this replaces) it works for oblique planes,
 not just axis-aligned ones.
 }
+\examples{
+\dontrun{
+image <- ReadImage_fix("statistical_map.nii.gz")
+mask <- ReadImage_fix("brainmask.nii.gz")
+contours <- slice_contours(
+  image, axis = "axial", coordinate = 0, levels = c(-2, 2),
+  mask = mask, mask_fill = "nan"
+)
+
+library(ggplot2)
+ggplot(contours, aes(x = x, y = y, group = interaction(level, obj))) +
+  geom_path()
+}
+}

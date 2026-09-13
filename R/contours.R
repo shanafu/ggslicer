@@ -1,4 +1,5 @@
 #' @importFrom rlang :=
+#' @importFrom magrittr %>%
 NULL
 
 # Reshape one slice's sampled intensity column (in the i-fastest, then j,
@@ -131,6 +132,10 @@ NULL
   results
 }
 
+# Bind per-path tibbles from .extract_contours(), drop paths shorter than
+# min_vertices (grouped by group_cols), and sort by group_cols + vertex.
+# empty_extra_col ("level" or "label") names the empty tibble's extra column
+# when results is empty.
 .finalize_contours_df <- function(results, group_cols, min_vertices, empty_extra_col) {
   if (length(results) == 0) {
     return(tibble::tibble(
@@ -193,6 +198,19 @@ NULL
 #'   ID within that package/slice/level), `vertex` (1-based order within the
 #'   path — always present and pre-sorted, unlike the row-order-dependent
 #'   legacy output), `x`, `y`, `z` (world coordinates).
+#' @examples
+#' \dontrun{
+#' image <- ReadImage_fix("statistical_map.nii.gz")
+#' mask <- ReadImage_fix("brainmask.nii.gz")
+#' contours <- slice_contours(
+#'   image, axis = "axial", coordinate = 0, levels = c(-2, 2),
+#'   mask = mask, mask_fill = "nan"
+#' )
+#'
+#' library(ggplot2)
+#' ggplot(contours, aes(x = x, y = y, group = interaction(level, obj))) +
+#'   geom_path()
+#' }
 #' @export
 slice_contours <- function(image, axis = NULL, coordinate = NULL, levels,
                             mask = NULL, mask_fill = c("zero", "nan"),
@@ -257,6 +275,15 @@ slice_contours <- function(image, axis = NULL, coordinate = NULL, levels,
 #' @return A tibble with columns `package`, `k`, `label`, `obj` (contour-path
 #'   ID within that package/slice/label), `vertex` (1-based order within the
 #'   path), `x`, `y`, `z` (world coordinates).
+#' @examples
+#' \dontrun{
+#' atlas <- ReadImage_fix("annotation.nii.gz")
+#' boundaries <- slice_label_contours(atlas, axis = "axial", coordinate = 0, labels = c(10557, 187))
+#'
+#' library(ggplot2)
+#' ggplot(boundaries, aes(x = x, y = y, group = interaction(label, obj), color = factor(label))) +
+#'   geom_path()
+#' }
 #' @export
 slice_label_contours <- function(image, axis = NULL, coordinate = NULL, labels = NULL,
                                   mask = NULL, mask_fill = c("zero", "nan"),

@@ -44,3 +44,12 @@ what makes visualizing a registration warp possible: build a grid (or
 contour, or any point set) on the fixed/reference image, then transform
 its points through the registration transform.
 }
+\examples{
+\dontrun{
+image <- ReadImage_fix("fixed_template.nii")
+grid_df <- slice_grid(image, axis = "axial", coordinate = 0, spacing = 5)
+
+# Visualize a registration warp by transforming a grid built on the fixed image
+warped_df <- transform_points(grid_df, "registration.xfm")
+}
+}

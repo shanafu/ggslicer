@@ -63,3 +63,16 @@ Internally, this is \code{\link[=build_slice_geometry]{build_slice_geometry()}} 
 supplied directly) followed by \code{\link[=sample_images]{sample_images()}}; see those for the
 geometry-construction and interpolator-selection details.
 }
+\examples{
+\dontrun{
+# Axial slice at world z = 0, with a mask overlaid as an extra column
+# (sampled nearest-neighbor automatically, since "mask" is a discrete name)
+df <- slice_image(
+  "brain_image.nii", axis = "axial", coordinate = 0,
+  extra_images = list(mask = "brainmask.nii.gz")
+)
+
+library(ggplot2)
+ggplot(df, aes(x = x, y = y, fill = value)) + geom_raster()
+}
+}

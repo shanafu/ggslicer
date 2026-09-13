@@ -37,6 +37,11 @@
 #'   `DisplacementFieldTransform` if `path` has exactly one block, or a
 #'   `CompositeTransform` (applying the blocks in file order) if it has more
 #'   than one.
+#' @examples
+#' \dontrun{
+#' xfm <- read_minc_transform("registration.xfm")
+#' xfm$TransformPoint(c(0, 0, 0))
+#' }
 #' @export
 read_minc_transform <- function(path) {
   text <- paste(readLines(path, warn = FALSE), collapse = "\n")
@@ -141,6 +146,14 @@ read_minc_transform <- function(path) {
 #'   transform.
 #' @return `df`, with `x_col`/`y_col`/`z_col` replaced by their transformed
 #'   coordinates.
+#' @examples
+#' \dontrun{
+#' image <- ReadImage_fix("fixed_template.nii")
+#' grid_df <- slice_grid(image, axis = "axial", coordinate = 0, spacing = 5)
+#'
+#' # Visualize a registration warp by transforming a grid built on the fixed image
+#' warped_df <- transform_points(grid_df, "registration.xfm")
+#' }
 #' @export
 transform_points <- function(df, transform, invert = FALSE, x_col = "x", y_col = "y", z_col = "z") {
   if (is.character(transform)) {

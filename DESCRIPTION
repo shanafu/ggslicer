@@ -12,12 +12,10 @@ Imports:
     ggplot2,
     grDevices,
     magrittr,
-    pbapply,
     R6,
     rlang,
     SimpleITK,
     tibble,
-    tidyselect,
     tools
 License: MIT + file LICENSE
 Encoding: UTF-8

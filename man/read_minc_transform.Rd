@@ -33,3 +33,9 @@ displacement rather than erroring. (A pure single-\code{Linear}-block \code{.xfm
 does parse correctly via \code{SimpleITK::ReadTransform()}, but this function
 handles that case too, for a single entry point regardless of content.)
 }
+\examples{
+\dontrun{
+xfm <- read_minc_transform("registration.xfm")
+xfm$TransformPoint(c(0, 0, 0))
+}
+}

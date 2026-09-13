@@ -58,3 +58,11 @@ wins over both. Images with more than 3 dimensions are indexed via
 their (single) sampled value broadcast across every combination present
 from higher-dimensional images.
 }
+\examples{
+\dontrun{
+image <- ReadImage_fix("brain_image.nii")
+mask <- ReadImage_fix("brainmask.nii.gz")
+geom <- SliceGeometry$from_image_axis(image, axis = "axial", coordinate = 0)
+df <- sample_images(geom, list(value = image, mask = mask))
+}
+}

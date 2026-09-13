@@ -123,6 +123,11 @@
 #'   fixed along this line), `line_id` (distinguishes different lines
 #'   sharing the same `part`/`grid_axis`), `vertex` (1-based order within
 #'   the line), `x`, `y`, `z` (world coordinates).
+#' @examples
+#' \dontrun{
+#' image <- ReadImage_fix("brain_image.nii")
+#' grid_df <- slice_grid(image, axis = "axial", coordinate = 0, spacing = 5)
+#' }
 #' @export
 slice_grid <- function(image = NULL, axis = NULL, coordinate = NULL,
                         spacing = NULL, point_spacing = NULL, padding = 0,
@@ -171,6 +176,15 @@ slice_grid <- function(image = NULL, axis = NULL, coordinate = NULL,
 #' @return A named list with elements `box` and `grid`, each a
 #'   `ggplot2::geom_path()` layer. Add both (e.g. `plt + layers$box + layers$grid`)
 #'   to a plot that already maps `x`/`y` via its own `aes()`.
+#' @examples
+#' \dontrun{
+#' image <- ReadImage_fix("brain_image.nii")
+#' grid_df <- slice_grid(image, axis = "axial", coordinate = 0, spacing = 5)
+#' layers <- slice_grid_layers(grid_df)
+#'
+#' library(ggplot2)
+#' ggplot(grid_df, aes(x = x, y = y)) + layers$box + layers$grid
+#' }
 #' @export
 slice_grid_layers <- function(grid_df,
                                box_color = "orange", box_linewidth = 1, box_alpha = 1,

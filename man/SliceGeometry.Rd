@@ -107,6 +107,53 @@ extra disambiguating direction is needed: 4 labeled corners fully
 determine the rectangle (\code{direction_i}/\code{direction_j} come directly from
 two of its edges).
 }
+\examples{
+\dontrun{
+# A 10x10 axial slice, 1mm spacing, centered at the world origin
+geom <- SliceGeometry$new(
+  origin = c(-5, -5, 0),
+  direction_i = c(1, 0, 0),
+  direction_j = c(0, 1, 0),
+  spacing = c(1, 1),
+  size = c(10, 10)
+)
+geom$get_extent()
+geom$get_sample_points()
+}
+
+\dontrun{
+geom <- SliceGeometry$from_corners(
+  p0 = c(0, 0, 0), p1 = c(10, 5, 0),
+  direction_i = c(1, 0, 0), size = c(11, 6)
+)
+}
+\dontrun{
+geom <- SliceGeometry$from_center(
+  center = c(0, 0, 0),
+  direction_i = c(1, 0, 0), direction_j = c(0, 1, 0),
+  spacing = c(1, 1), size = c(10, 10)
+)
+}
+\dontrun{
+# A coronal-like plane through the origin, normal to the y-axis
+geom <- SliceGeometry$from_normal(
+  origin = c(0, 0, 0), normal = c(0, 1, 0),
+  spacing = c(1, 1), size = c(10, 10)
+)
+}
+\dontrun{
+image <- ReadImage_fix("brain_image.nii")
+geom <- SliceGeometry$from_image_axis(image, axis = "axial", coordinate = 0)
+}
+\dontrun{
+geom <- SliceGeometry$new(
+  origin = c(0, 0, 0), direction_i = c(1, 0, 0), direction_j = c(0, 1, 0),
+  spacing = c(1, 1), size = c(10, 10)
+)
+bounds <- geom$get_bounds()
+geom2 <- SliceGeometry$from_bounds(bounds, size = c(10, 10))
+}
+}
 \section{Methods}{
 \subsection{Public methods}{
   \itemize{

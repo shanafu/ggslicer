@@ -81,6 +81,20 @@
 #' `PixelSpacing`) or how a SimpleITK image stores its own
 #' origin/direction/spacing/size.
 #'
+#' @examples
+#' \dontrun{
+#' # A 10x10 axial slice, 1mm spacing, centered at the world origin
+#' geom <- SliceGeometry$new(
+#'   origin = c(-5, -5, 0),
+#'   direction_i = c(1, 0, 0),
+#'   direction_j = c(0, 1, 0),
+#'   spacing = c(1, 1),
+#'   size = c(10, 10)
+#' )
+#' geom$get_extent()
+#' geom$get_sample_points()
+#' }
+#'
 #' @importFrom R6 R6Class
 #' @importFrom tibble tibble
 #' @export
@@ -438,6 +452,13 @@ SliceGeometry <- R6::R6Class(
 #' @param spacing Numeric length-2 vector: step size along `(i, j)`. Exactly one of `spacing`/`size` must be supplied.
 #' @param size Integer-valued length-2 vector: number of samples along `(i, j)`. Exactly one of `spacing`/`size` must be supplied.
 #' @return A new `SliceGeometry`.
+#' @examples
+#' \dontrun{
+#' geom <- SliceGeometry$from_corners(
+#'   p0 = c(0, 0, 0), p1 = c(10, 5, 0),
+#'   direction_i = c(1, 0, 0), size = c(11, 6)
+#' )
+#' }
 #' @rdname SliceGeometry
 #' @name SliceGeometry_from_corners
 SliceGeometry$from_corners <- function(p0, p1, direction_i, spacing = NULL, size = NULL) {
@@ -506,6 +527,14 @@ SliceGeometry$from_corners <- function(p0, p1, direction_i, spacing = NULL, size
 #' @param spacing Numeric length-2 vector: step size along `(i, j)`.
 #' @param size Integer-valued length-2 vector: number of samples along `(i, j)`.
 #' @return A new `SliceGeometry`.
+#' @examples
+#' \dontrun{
+#' geom <- SliceGeometry$from_center(
+#'   center = c(0, 0, 0),
+#'   direction_i = c(1, 0, 0), direction_j = c(0, 1, 0),
+#'   spacing = c(1, 1), size = c(10, 10)
+#' )
+#' }
 #' @rdname SliceGeometry
 #' @name SliceGeometry_from_center
 SliceGeometry$from_center <- function(center, direction_i, direction_j, spacing, size) {
@@ -537,6 +566,14 @@ SliceGeometry$from_center <- function(center, direction_i, direction_j, spacing,
 #'   in-plane rotation (see Details); must not be parallel to `normal`.
 #'   Defaults to a world-axis seed.
 #' @return A new `SliceGeometry`.
+#' @examples
+#' \dontrun{
+#' # A coronal-like plane through the origin, normal to the y-axis
+#' geom <- SliceGeometry$from_normal(
+#'   origin = c(0, 0, 0), normal = c(0, 1, 0),
+#'   spacing = c(1, 1), size = c(10, 10)
+#' )
+#' }
 #' @rdname SliceGeometry
 #' @name SliceGeometry_from_normal
 SliceGeometry$from_normal <- function(origin, normal, spacing, size, direction_i = NULL) {
@@ -588,6 +625,11 @@ SliceGeometry$from_normal <- function(origin, normal, spacing, size, direction_i
 #' @param coordinate Single number: the desired world coordinate along `axis`
 #'   (snapped to the nearest voxel plane).
 #' @return A new `SliceGeometry`.
+#' @examples
+#' \dontrun{
+#' image <- ReadImage_fix("brain_image.nii")
+#' geom <- SliceGeometry$from_image_axis(image, axis = "axial", coordinate = 0)
+#' }
 #' @rdname SliceGeometry
 #' @name SliceGeometry_from_image_axis
 SliceGeometry$from_image_axis <- function(image, axis, coordinate) {
@@ -636,6 +678,15 @@ SliceGeometry$from_image_axis <- function(image, axis, coordinate) {
 #' @param spacing Numeric length-2 vector: step size along `(i, j)`. Exactly one of `spacing`/`size` must be supplied.
 #' @param size Integer-valued length-2 vector: number of samples along `(i, j)`. Exactly one of `spacing`/`size` must be supplied.
 #' @return A new `SliceGeometry`.
+#' @examples
+#' \dontrun{
+#' geom <- SliceGeometry$new(
+#'   origin = c(0, 0, 0), direction_i = c(1, 0, 0), direction_j = c(0, 1, 0),
+#'   spacing = c(1, 1), size = c(10, 10)
+#' )
+#' bounds <- geom$get_bounds()
+#' geom2 <- SliceGeometry$from_bounds(bounds, size = c(10, 10))
+#' }
 #' @rdname SliceGeometry
 #' @name SliceGeometry_from_bounds
 SliceGeometry$from_bounds <- function(bounds, spacing = NULL, size = NULL) {
@@ -712,6 +763,16 @@ SliceGeometry$from_bounds <- function(bounds, spacing = NULL, size = NULL) {
 #' rectangular-cuboid sampling volume, exactly analogous to how a stack of 2D
 #' DICOM slices forms a 3D volume. It is built from a single base `SliceGeometry`
 #' (the slice at `k = 0`) plus a step size and sample count along the normal.
+#'
+#' @examples
+#' \dontrun{
+#' base_slice <- SliceGeometry$new(
+#'   origin = c(-5, -5, 0), direction_i = c(1, 0, 0), direction_j = c(0, 1, 0),
+#'   spacing = c(1, 1), size = c(10, 10)
+#' )
+#' pkg <- SlicePackage$new(base_slice = base_slice, spacing_k = 1, size_k = 5)
+#' pkg$get_size()
+#' }
 #'
 #' @export
 SlicePackage <- R6::R6Class(
@@ -953,6 +1014,14 @@ SlicePackage <- R6::R6Class(
 #'   the last slice). `spacing_k` is derived as `extent_k / (size_k - 1)`.
 #' @param size_k Number of parallel slices in the stack. Must be `>= 2`.
 #' @return A new `SlicePackage`.
+#' @examples
+#' \dontrun{
+#' base_slice <- SliceGeometry$new(
+#'   origin = c(-5, -5, 0), direction_i = c(1, 0, 0), direction_j = c(0, 1, 0),
+#'   spacing = c(1, 1), size = c(10, 10)
+#' )
+#' pkg <- SlicePackage$from_extent_k(base_slice, extent_k = 10, size_k = 5)
+#' }
 #' @rdname SlicePackage
 #' @name SlicePackage_from_extent_k
 SlicePackage$from_extent_k <- function(base_slice, extent_k, size_k) {
@@ -977,6 +1046,14 @@ SlicePackage$from_extent_k <- function(base_slice, extent_k, size_k) {
 #' @param spacing_k Step size along the normal direction. Must be `> 0`.
 #' @param size_k Number of parallel slices in the stack. Must be `>= 1`.
 #' @return A new `SlicePackage`.
+#' @examples
+#' \dontrun{
+#' center_slice <- SliceGeometry$new(
+#'   origin = c(-5, -5, 0), direction_i = c(1, 0, 0), direction_j = c(0, 1, 0),
+#'   spacing = c(1, 1), size = c(10, 10)
+#' )
+#' pkg <- SlicePackage$from_center_k(center_slice, spacing_k = 1, size_k = 5)
+#' }
 #' @rdname SlicePackage
 #' @name SlicePackage_from_center_k
 SlicePackage$from_center_k <- function(center_slice, spacing_k, size_k) {
@@ -1005,6 +1082,15 @@ SlicePackage$from_center_k <- function(center_slice, spacing_k, size_k) {
 #'   slice to measure a gap against). Ignored when `slices` has 2 or more
 #'   elements, where `spacing_k` is always derived from their spacing.
 #' @return A new `SlicePackage`.
+#' @examples
+#' \dontrun{
+#' slice1 <- SliceGeometry$new(
+#'   origin = c(0, 0, 0), direction_i = c(1, 0, 0), direction_j = c(0, 1, 0),
+#'   spacing = c(1, 1), size = c(10, 10)
+#' )
+#' slice2 <- slice1$translate(c(0, 0, 1))
+#' pkg <- SlicePackage$from_slices(list(slice1, slice2))
+#' }
 #' @rdname SlicePackage
 #' @name SlicePackage_from_slices
 SlicePackage$from_slices <- function(slices, spacing_k = NULL) {
@@ -1077,6 +1163,11 @@ SlicePackage$from_slices <- function(slices, spacing_k = NULL) {
 #'   `"x"`/`"y"`/`"z"`, or (assuming right-anterior-superior orientation)
 #'   `"sagittal"`/`"coronal"`/`"axial"`/`"horizontal"`.
 #' @return A new `SlicePackage`.
+#' @examples
+#' \dontrun{
+#' image <- ReadImage_fix("brain_image.nii")
+#' pkg <- SlicePackage$from_image_axis(image, axis = "axial")
+#' }
 #' @rdname SlicePackage
 #' @name SlicePackage_from_image_axis
 SlicePackage$from_image_axis <- function(image, axis) {
@@ -1130,6 +1221,13 @@ SlicePackage$from_image_axis <- function(image, axis) {
 #' [SliceGeometry]/[SlicePackage] is fundamentally a plane (or stack of parallel
 #' planes) embedded in 3D physical space, so genuinely 1D/2D source images
 #' are outside the scope of this sampling model.
+#'
+#' @examples
+#' \dontrun{
+#' image <- ReadImage_fix("brain_image.nii")
+#' pset <- SlicePackageSet$from_orthogonal_triplet(image, list(x = 0, y = 0, z = 0))
+#' pset$get_package_names()
+#' }
 #'
 #' @export
 SlicePackageSet <- R6::R6Class(
@@ -1359,6 +1457,13 @@ SlicePackageSet <- R6::R6Class(
 #'   Resulting packages are always named `"sagittal"`, `"coronal"`, `"axial"`,
 #'   regardless of which synonym was used to specify them.
 #' @return A new `SlicePackageSet`.
+#' @examples
+#' \dontrun{
+#' image <- ReadImage_fix("brain_image.nii")
+#' pset <- SlicePackageSet$from_orthogonal_triplet(
+#'   image, list(sagittal = 0, coronal = 0, axial = 0)
+#' )
+#' }
 #' @rdname SlicePackageSet
 #' @name SlicePackageSet_from_orthogonal_triplet
 SlicePackageSet$from_orthogonal_triplet <- function(image, coordinates) {
@@ -1396,6 +1501,15 @@ SlicePackageSet$from_orthogonal_triplet <- function(image, coordinates) {
 #'   (auto-wrapped as a single-slice package, exactly as in the primary
 #'   constructor), or a list containing any mix of the two.
 #' @return A new `SlicePackageSet`.
+#' @examples
+#' \dontrun{
+#' base_slice <- SliceGeometry$new(
+#'   origin = c(-5, -5, 0), direction_i = c(1, 0, 0), direction_j = c(0, 1, 0),
+#'   spacing = c(1, 1), size = c(10, 10)
+#' )
+#' pkg <- SlicePackage$new(base_slice = base_slice, spacing_k = 1, size_k = 5)
+#' pset <- SlicePackageSet$from_slice_packages(pkg)
+#' }
 #' @rdname SlicePackageSet
 #' @name SlicePackageSet_from_slice_packages
 SlicePackageSet$from_slice_packages <- function(packages) {
