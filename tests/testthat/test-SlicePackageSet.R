@@ -195,3 +195,29 @@ test_that("SlicePackageSet$from_orthogonal_triplet() builds the classic 3-plane 
   )
   expect_error(SlicePackageSet$from_orthogonal_triplet(img, list(0, 1)), "fully named")
 })
+
+test_that("SlicePackageSet$from_slice_packages() builds a set from an unnamed list or a single package", {
+  base <- SliceGeometry$new(c(0, 0, 0), c(1, 0, 0), c(0, 1, 0), c(1, 1), c(3, 3))
+  pkg1 <- SlicePackage$new(base_slice = base, spacing_k = 1, size_k = 2)
+  pkg2 <- SlicePackage$new(base_slice = base, spacing_k = 1, size_k = 3)
+
+  sset <- SlicePackageSet$from_slice_packages(list(pkg1, pkg2))
+  expect_equal(sset$get_package_names(), c("package_1", "package_2"))
+  expect_equal(nrow(sset$get_sample_points()), 9 * 2 + 9 * 3)
+
+  # a single SlicePackage, not wrapped in a list
+  sset_single <- SlicePackageSet$from_slice_packages(pkg1)
+  expect_equal(sset_single$get_package_names(), "package_1")
+  expect_equal(nrow(sset_single$get_sample_points()), 9 * 2)
+
+  # a single bare SliceGeometry, auto-wrapped as size_k = 1
+  sset_slice <- SlicePackageSet$from_slice_packages(base)
+  expect_equal(sset_slice$get_packages()[["package_1"]]$get_size_k(), 1L)
+
+  # a mixed list of SlicePackage and bare SliceGeometry
+  sset_mixed <- SlicePackageSet$from_slice_packages(list(pkg1, base))
+  expect_equal(sset_mixed$get_package_names(), c("package_1", "package_2"))
+  expect_equal(sset_mixed$get_packages()[["package_2"]]$get_size_k(), 1L)
+
+  expect_error(SlicePackageSet$from_slice_packages("not a package"), "SlicePackage.*SliceGeometry")
+})

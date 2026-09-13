@@ -169,7 +169,7 @@ test_that("SlicePackage$from_slices() adopts a list of pre-built parallel slices
   expect_equal(pkg$get_size_k(), 4L)
   expect_equal(pkg$get_base_slice()$get_origin(), base$get_origin())
 
-  expect_error(SlicePackage$from_slices(list(base)), "at least 2")
+  expect_error(SlicePackage$from_slices(list()), "at least 1")
   expect_error(SlicePackage$from_slices(list(base, "not a slice")), "SliceGeometry")
 
   different_size <- base$clone()
@@ -183,6 +183,22 @@ test_that("SlicePackage$from_slices() adopts a list of pre-built parallel slices
   off_axis <- slices
   off_axis[[2]] <- off_axis[[2]]$translate(c(0.1, 0, 0))
   expect_error(SlicePackage$from_slices(off_axis), "aligned along the shared normal")
+})
+
+test_that("SlicePackage$from_slices() supports a single slice given an explicit spacing_k", {
+  base <- base_slice()
+
+  expect_error(SlicePackage$from_slices(list(base)), "spacing_k.*must be supplied explicitly")
+
+  pkg <- SlicePackage$from_slices(list(base), spacing_k = 2)
+  expect_equal(pkg$get_size_k(), 1L)
+  expect_equal(pkg$get_spacing_k(), 2)
+  expect_equal(pkg$get_base_slice()$get_origin(), base$get_origin())
+
+  # spacing_k is ignored (derived from the data instead) once there are >= 2 slices
+  slices <- lapply(0:3, function(k) base$translate(k * 2 * base$get_normal()))
+  pkg2 <- SlicePackage$from_slices(slices, spacing_k = 999)
+  expect_equal(pkg2$get_spacing_k(), 2)
 })
 
 test_that("SlicePackage$from_image_axis() spans the whole image at its own resolution", {
