@@ -43,6 +43,10 @@ after applying \code{transform}, leaving every other column untouched. This is
 what makes visualizing a registration warp possible: build a grid (or
 contour, or any point set) on the fixed/reference image, then transform
 its points through the registration transform.
+
+Transforms one point at a time (\code{SimpleITK} has no vectorized/batch
+transform-point API), so this can take a while for a large data frame —
+progress is reported via \code{pbapply::pbapply()}.
 }
 \examples{
 \dontrun{

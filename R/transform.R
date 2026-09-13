@@ -131,6 +131,10 @@ read_minc_transform <- function(path) {
 #' contour, or any point set) on the fixed/reference image, then transform
 #' its points through the registration transform.
 #'
+#' Transforms one point at a time (`SimpleITK` has no vectorized/batch
+#' transform-point API), so this can take a while for a large data frame —
+#' progress is reported via `pbapply::pbapply()`.
+#'
 #' @param df A data frame with `x_col`/`y_col`/`z_col` columns.
 #' @param transform A `SimpleITK` transform object, or a file path (read via
 #'   [read_minc_transform()] for `.xfm`, or `SimpleITK::ReadTransform()`
@@ -163,22 +167,11 @@ transform_points <- function(df, transform, invert = FALSE, x_col = "x", y_col =
     transform <- transform$GetInverse()
   }
 
-  n <- nrow(df)
-  out_x <- numeric(n)
-  out_y <- numeric(n)
-  out_z <- numeric(n)
-  xs <- df[[x_col]]
-  ys <- df[[y_col]]
-  zs <- df[[z_col]]
-  for (i in seq_len(n)) {
-    p <- transform$TransformPoint(c(xs[i], ys[i], zs[i]))
-    out_x[i] <- p[1]
-    out_y[i] <- p[2]
-    out_z[i] <- p[3]
-  }
+  coords <- cbind(df[[x_col]], df[[y_col]], df[[z_col]])
+  transformed <- pbapply::pbapply(coords, 1, function(point) transform$TransformPoint(point))
 
-  df[[x_col]] <- out_x
-  df[[y_col]] <- out_y
-  df[[z_col]] <- out_z
+  df[[x_col]] <- transformed[1, ]
+  df[[y_col]] <- transformed[2, ]
+  df[[z_col]] <- transformed[3, ]
   df
 }
