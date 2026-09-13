@@ -3,6 +3,7 @@
 \name{SlicePackageSet}
 \alias{SlicePackageSet}
 \alias{SlicePackageSet_from_orthogonal_triplet}
+\alias{SlicePackageSet_from_slice_packages}
 \title{A collection of SlicePackages, ready for combined intensity extraction}
 \arguments{
 \item{image}{A 3D \code{SimpleITK} image.}
@@ -14,8 +15,14 @@ synonyms accepted throughout this package (\code{1}/\code{2}/\code{3}, \code{"x"
 planes may be supplied, but each plane may only be specified once.
 Resulting packages are always named \code{"sagittal"}, \code{"coronal"}, \code{"axial"},
 regardless of which synonym was used to specify them.}
+
+\item{packages}{A \link{SlicePackage} object, a bare \link{SliceGeometry} object
+(auto-wrapped as a single-slice package, exactly as in the primary
+constructor), or a list containing any mix of the two.}
 }
 \value{
+A new \code{SlicePackageSet}.
+
 A new \code{SlicePackageSet}.
 }
 \description{
@@ -40,6 +47,12 @@ are outside the scope of this sampling model.
 Construct a \code{SlicePackageSet} containing the classic sagittal, coronal,
 and axial single-slice planes through a reference image, at the given
 coordinates.
+
+Construct a \code{SlicePackageSet} from a plain (unnamed) list of
+\link{SlicePackage} objects — or a single one, not wrapped in a list — rather
+than a named list. Packages are auto-named \code{"package_1"}, \code{"package_2"},
+etc., in the order given; use \code{set_packages()}/\code{rename_package()}
+afterward for more meaningful names.
 }
 \section{Methods}{
 \subsection{Public methods}{
@@ -74,6 +87,9 @@ coordinates.
     }
     \if{html}{\out{</div>}}
   }
+  \subsection{Returns}{
+    A new \code{SlicePackageSet} object.
+  }
 }
 
 \if{html}{\out{<hr>}}
@@ -86,6 +102,9 @@ coordinates.
     \preformatted{SlicePackageSet$get_packages()}
     \if{html}{\out{</div>}}
   }
+  \subsection{Returns}{
+    A named list of \link{SlicePackage} objects (possibly empty).
+  }
 }
 
 \if{html}{\out{<hr>}}
@@ -97,6 +116,9 @@ coordinates.
     \if{html}{\out{<div class="r">}}
     \preformatted{SlicePackageSet$get_package_names()}
     \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    Character vector (possibly empty).
   }
 }
 
@@ -119,6 +141,9 @@ coordinates.
     }
     \if{html}{\out{</div>}}
   }
+  \subsection{Returns}{
+    The \code{SlicePackageSet} object, invisibly (for chaining).
+  }
 }
 
 \if{html}{\out{<hr>}}
@@ -138,6 +163,9 @@ coordinates.
     }
     \if{html}{\out{</div>}}
   }
+  \subsection{Returns}{
+    The \code{SlicePackageSet} object, invisibly (for chaining).
+  }
 }
 
 \if{html}{\out{<hr>}}
@@ -156,6 +184,9 @@ coordinates.
       \item{\code{packages}}{A named list of \link{SlicePackage} objects (may be empty).}
     }
     \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    The \code{SlicePackageSet} object, invisibly (for chaining).
   }
 }
 
@@ -177,6 +208,9 @@ coordinates.
     }
     \if{html}{\out{</div>}}
   }
+  \subsection{Returns}{
+    The \code{SlicePackageSet} object, invisibly (for chaining).
+  }
 }
 
 \if{html}{\out{<hr>}}
@@ -189,6 +223,10 @@ with columns \verb{package, i, j, k, x, y, z}.
     \if{html}{\out{<div class="r">}}
     \preformatted{SlicePackageSet$get_sample_points()}
     \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A tibble with columns \code{package} (character), \code{i}, \code{j}, \code{k}
+(integer, 0-indexed) and \code{x}, \code{y}, \code{z} (numeric world coordinates).
   }
 }
 
@@ -223,6 +261,12 @@ combination is sampled. Must be an empty list if \code{image} is 3D.}
     }
     \if{html}{\out{</div>}}
   }
+  \subsection{Returns}{
+    A tibble with columns \code{package} (character), one column per
+name in \code{extra_index} (if any), \code{i}, \code{j}, \code{k} (integer, 0-indexed),
+\code{x}, \code{y}, \code{z} (numeric world coordinates), and \code{intensity} (numeric,
+\code{NA} outside \code{image}'s bounds).
+  }
 }
 
 \if{html}{\out{<hr>}}
@@ -241,6 +285,9 @@ combination is sampled. Must be an empty list if \code{image} is 3D.}
       \item{\code{...}}{Unused; present for compatibility with the generic \code{print()}.}
     }
     \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    The \code{SlicePackageSet} object, invisibly.
   }
 }
 

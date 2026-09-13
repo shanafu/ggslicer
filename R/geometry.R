@@ -94,6 +94,7 @@ SliceGeometry <- R6::R6Class(
     #' @param direction_j Numeric length-3 unit vector: world direction of the `j` axis. Must be orthogonal to `direction_i`.
     #' @param spacing Numeric length-2 vector: step size along `(i, j)`. Both entries must be `> 0`.
     #' @param size Integer-valued length-2 vector: number of samples along `(i, j)`. Both entries must be `>= 1`.
+    #' @return A new `SliceGeometry` object.
     initialize = function(origin, direction_i, direction_j, spacing, size) {
       private$set_origin_impl(origin)
       private$set_direction_impl(direction_i, direction_j)
@@ -102,34 +103,45 @@ SliceGeometry <- R6::R6Class(
     },
 
     #' @description World coordinates of sample `(i = 0, j = 0)`.
+    #' @return Numeric length-3 vector.
     get_origin = function() private$origin_,
 
     #' @description The 3x2 direction matrix (columns `i`, `j`; rows `x`, `y`, `z`).
+    #' @return Numeric 3x2 matrix.
     get_direction = function() private$direction_,
 
     #' @description World-space unit vector for the `i` axis.
+    #' @return Numeric length-3 unit vector.
     get_direction_i = function() private$direction_[, "i"],
 
     #' @description World-space unit vector for the `j` axis.
+    #' @return Numeric length-3 unit vector.
     get_direction_j = function() private$direction_[, "j"],
 
     #' @description Step size along `(i, j)`.
+    #' @return Numeric length-2 vector.
     get_spacing = function() private$spacing_,
 
     #' @description Number of samples along `(i, j)`.
+    #' @return Integer length-2 vector.
     get_size = function() private$size_,
 
     #' @description Unit normal vector of the slice's plane (`direction_i x direction_j`).
+    #' @return Numeric length-3 unit vector.
     get_normal = function() .cross3(private$direction_[, "i"], private$direction_[, "j"]),
 
     #' @description The infinite plane the slice lies on, independent of its
     #'   finite extent: `list(point, normal)`.
+    #' @return A list with elements `point` (numeric length-3 vector) and
+    #'   `normal` (numeric length-3 unit vector).
     get_plane = function() list(point = private$origin_, normal = self$get_normal()),
 
     #' @description Physical extent (width, height) of the slice: `spacing * (size - 1)`.
+    #' @return Numeric length-2 vector.
     get_extent = function() private$spacing_ * (private$size_ - 1),
 
     #' @description World coordinates of the grid's midpoint.
+    #' @return Numeric length-3 vector.
     get_center = function() {
       extent <- self$get_extent()
       private$origin_ +
@@ -139,6 +151,8 @@ SliceGeometry <- R6::R6Class(
 
     #' @description World coordinates of the 4 corners of the sampling
     #'   rectangle, as a tibble.
+    #' @return A tibble with columns `corner` (one of `"i0_j0"`, `"i1_j0"`,
+    #'   `"i0_j1"`, `"i1_j1"`), `x`, `y`, `z`.
     get_bounds = function() {
       extent <- self$get_extent()
       di <- private$direction_[, "i"]
@@ -159,6 +173,8 @@ SliceGeometry <- R6::R6Class(
     #'   as a tibble with columns `i, j, x, y, z`. `i`/`j` are 0-indexed, in
     #'   the same convention used elsewhere in this package. The result is
     #'   memoized and recomputed only after a setter changes the geometry.
+    #' @return A tibble with one row per sample point and columns `i`, `j`
+    #'   (integer, 0-indexed) and `x`, `y`, `z` (numeric world coordinates).
     get_sample_points = function() {
       if (!is.null(private$sample_points_cache_)) {
         return(private$sample_points_cache_)
@@ -182,6 +198,7 @@ SliceGeometry <- R6::R6Class(
 
     #' @description Update the origin.
     #' @param origin Numeric length-3 vector.
+    #' @return The `SliceGeometry` object, invisibly (for chaining).
     set_origin = function(origin) {
       private$set_origin_impl(origin)
       private$invalidate_cache()
@@ -191,6 +208,7 @@ SliceGeometry <- R6::R6Class(
     #' @description Update the in-plane direction basis.
     #' @param direction_i Numeric length-3 unit vector, orthogonal to `direction_j`.
     #' @param direction_j Numeric length-3 unit vector, orthogonal to `direction_i`.
+    #' @return The `SliceGeometry` object, invisibly (for chaining).
     set_direction = function(direction_i, direction_j) {
       private$set_direction_impl(direction_i, direction_j)
       private$invalidate_cache()
@@ -199,6 +217,7 @@ SliceGeometry <- R6::R6Class(
 
     #' @description Update the per-axis step size.
     #' @param spacing Numeric length-2 vector, both entries `> 0`.
+    #' @return The `SliceGeometry` object, invisibly (for chaining).
     set_spacing = function(spacing) {
       private$set_spacing_impl(spacing)
       private$invalidate_cache()
@@ -207,6 +226,7 @@ SliceGeometry <- R6::R6Class(
 
     #' @description Update the per-axis sample count.
     #' @param size Integer-valued length-2 vector, both entries `>= 1`.
+    #' @return The `SliceGeometry` object, invisibly (for chaining).
     set_size = function(size) {
       private$set_size_impl(size)
       private$invalidate_cache()
@@ -216,6 +236,7 @@ SliceGeometry <- R6::R6Class(
     #' @description Reposition the rectangle so its midpoint is at `center`,
     #'   keeping direction, spacing, and size unchanged (updates `origin`).
     #' @param center Numeric length-3 vector.
+    #' @return The `SliceGeometry` object, invisibly (for chaining).
     set_center = function(center) {
       if (!is.numeric(center) || length(center) != 3) {
         stop("`center` must be a numeric length-3 vector.", call. = FALSE)
@@ -231,6 +252,7 @@ SliceGeometry <- R6::R6Class(
 
     #' @description Update the step size along `i` only.
     #' @param spacing_i Single number, `> 0`.
+    #' @return The `SliceGeometry` object, invisibly (for chaining).
     set_spacing_i = function(spacing_i) {
       if (!is.numeric(spacing_i) || length(spacing_i) != 1 || spacing_i <= 0) {
         stop("`spacing_i` must be a single number > 0.", call. = FALSE)
@@ -242,6 +264,7 @@ SliceGeometry <- R6::R6Class(
 
     #' @description Update the step size along `j` only.
     #' @param spacing_j Single number, `> 0`.
+    #' @return The `SliceGeometry` object, invisibly (for chaining).
     set_spacing_j = function(spacing_j) {
       if (!is.numeric(spacing_j) || length(spacing_j) != 1 || spacing_j <= 0) {
         stop("`spacing_j` must be a single number > 0.", call. = FALSE)
@@ -253,6 +276,7 @@ SliceGeometry <- R6::R6Class(
 
     #' @description Update the sample count along `i` only.
     #' @param size_i Single integer, `>= 1`.
+    #' @return The `SliceGeometry` object, invisibly (for chaining).
     set_size_i = function(size_i) {
       if (length(size_i) != 1 || size_i < 1 || size_i != round(size_i)) {
         stop("`size_i` must be a single integer >= 1.", call. = FALSE)
@@ -264,6 +288,7 @@ SliceGeometry <- R6::R6Class(
 
     #' @description Update the sample count along `j` only.
     #' @param size_j Single integer, `>= 1`.
+    #' @return The `SliceGeometry` object, invisibly (for chaining).
     set_size_j = function(size_j) {
       if (length(size_j) != 1 || size_j < 1 || size_j != round(size_j)) {
         stop("`size_j` must be a single integer >= 1.", call. = FALSE)
@@ -281,6 +306,7 @@ SliceGeometry <- R6::R6Class(
     #'   resolution to fit the new extent at the current sample count) or
     #'   `"size"` (changes sample count to fit the new extent at the current
     #'   resolution).
+    #' @return The `SliceGeometry` object, invisibly (for chaining).
     set_extent = function(extent, adjust = c("spacing", "size")) {
       adjust <- match.arg(adjust)
       if (!is.numeric(extent) || length(extent) != 2 || any(extent < 0)) {
@@ -306,6 +332,7 @@ SliceGeometry <- R6::R6Class(
     #'   origin shifted by `offset` (e.g. `offset = spacing_k * get_normal()`
     #'   to move to the next parallel slice in a stack).
     #' @param offset Numeric length-3 vector.
+    #' @return A new `SliceGeometry` object.
     translate = function(offset) {
       if (!is.numeric(offset) || length(offset) != 3) {
         stop("`offset` must be a numeric length-3 vector.", call. = FALSE)
@@ -324,6 +351,8 @@ SliceGeometry <- R6::R6Class(
     #'   exactly matches this slice, suitable as the `referenceImage`
     #'   argument to `SimpleITK::Resample()` for extracting intensities.
     #' @param spacing_k Spacing to assign to the synthetic third (normal) axis. Arbitrary, since that axis has only one sample; defaults to `1`.
+    #' @return A `SimpleITK` image object of size `(n_i, n_j, 1)`, with no
+    #'   pixel data set (all zeros).
     as_sitk_reference_image = function(spacing_k = 1) {
       direction_3x3 <- cbind(private$direction_, normal = self$get_normal())
       img <- SimpleITK::Image(
@@ -338,6 +367,7 @@ SliceGeometry <- R6::R6Class(
 
     #' @description Print a short summary of the slice's geometry.
     #' @param ... Unused; present for compatibility with the generic `print()`.
+    #' @return The `SliceGeometry` object, invisibly.
     print = function(...) {
       cat("<SliceGeometry>\n")
       cat("  origin:     ", paste(signif(private$origin_, 4), collapse = ", "), "\n")
@@ -561,6 +591,7 @@ SliceGeometry$from_normal <- function(origin, normal, spacing, size, direction_i
 #' @rdname SliceGeometry
 #' @name SliceGeometry_from_image_axis
 SliceGeometry$from_image_axis <- function(image, axis, coordinate) {
+  check_sitk_image(image)
   if (image$GetDimension() != 3) {
     stop("`image` must be a 3D image.", call. = FALSE)
   }
@@ -691,6 +722,7 @@ SlicePackage <- R6::R6Class(
     #' @param base_slice A [SliceGeometry] object: the slice at `k = 0`.
     #' @param spacing_k Step size along the normal direction. Must be `> 0`.
     #' @param size_k Number of parallel slices in the stack. Must be `>= 1`.
+    #' @return A new `SlicePackage` object.
     initialize = function(base_slice, spacing_k, size_k) {
       private$set_base_slice_impl(base_slice)
       private$set_spacing_k_impl(spacing_k)
@@ -701,25 +733,32 @@ SlicePackage <- R6::R6Class(
     #'   the live internal object) is returned so that mutating it can't
     #'   silently desynchronize this package's cached sample points; use
     #'   `set_base_slice()` to actually change it.
+    #' @return A new, independent [SliceGeometry] object.
     get_base_slice = function() private$base_slice_$clone(),
 
     #' @description Step size along the normal (`k`) direction.
+    #' @return Single number.
     get_spacing_k = function() private$spacing_k_,
 
     #' @description Number of parallel slices in the stack.
+    #' @return Single integer.
     get_size_k = function() private$size_k_,
 
     #' @description Full 3D spacing, `c(spacing_i, spacing_j, spacing_k)`.
+    #' @return Numeric length-3 vector.
     get_spacing = function() c(private$base_slice_$get_spacing(), private$spacing_k_),
 
     #' @description Full 3D size, `c(n_i, n_j, n_k)`.
+    #' @return Integer length-3 vector.
     get_size = function() c(private$base_slice_$get_size(), private$size_k_),
 
     #' @description Unit normal of the base slice's plane (shared by every slice in the stack).
+    #' @return Numeric length-3 unit vector.
     get_normal = function() private$base_slice_$get_normal(),
 
     #' @description The `k`-th `SliceGeometry` in the stack.
     #' @param k Single integer in `0:(size_k - 1)`.
+    #' @return A new [SliceGeometry] object.
     get_slice = function(k) {
       if (length(k) != 1 || k != round(k) || k < 0 || k >= private$size_k_) {
         stop("`k` must be a single integer in 0:(size_k - 1).", call. = FALSE)
@@ -730,6 +769,8 @@ SlicePackage <- R6::R6Class(
     #' @description Physical coordinates of every sample point in the stack,
     #'   as a tibble with columns `i, j, k, x, y, z`. Memoized like
     #'   [SliceGeometry]'s `get_sample_points()`.
+    #' @return A tibble with one row per sample point and columns `i`, `j`,
+    #'   `k` (integer, 0-indexed) and `x`, `y`, `z` (numeric world coordinates).
     get_sample_points = function() {
       if (!is.null(private$sample_points_cache_)) {
         return(private$sample_points_cache_)
@@ -760,6 +801,8 @@ SlicePackage <- R6::R6Class(
     #' @description Build a pixel-less 3D SimpleITK reference image spanning
     #'   the whole stack in a single geometry, suitable as the
     #'   `referenceImage` argument to `SimpleITK::Resample()`.
+    #' @return A `SimpleITK` image object of size `(n_i, n_j, n_k)`, with no
+    #'   pixel data set (all zeros).
     as_sitk_reference_image = function() {
       base <- private$base_slice_
       size <- self$get_size()
@@ -782,7 +825,10 @@ SlicePackage <- R6::R6Class(
     #'   the source image's bounds).
     #' @param image A 3D `SimpleITK` image.
     #' @param interpolator SimpleITK interpolator name, e.g. `"sitkLinear"` (default) or `"sitkNearestNeighbor"`.
+    #' @return A tibble: `get_sample_points()`'s columns (`i`, `j`, `k`, `x`,
+    #'   `y`, `z`) plus `intensity` (numeric, `NA` outside `image`'s bounds).
     sample_intensity = function(image, interpolator = "sitkLinear") {
+      check_sitk_image(image)
       if (image$GetDimension() != 3) {
         stop(
           "`image` must be a 3D image; extract a spatial sub-volume first for ",
@@ -803,6 +849,7 @@ SlicePackage <- R6::R6Class(
 
     #' @description Update the step size along the normal.
     #' @param spacing_k Single number, `> 0`.
+    #' @return The `SlicePackage` object, invisibly (for chaining).
     set_spacing_k = function(spacing_k) {
       private$set_spacing_k_impl(spacing_k)
       private$invalidate_cache()
@@ -811,6 +858,7 @@ SlicePackage <- R6::R6Class(
 
     #' @description Update the number of parallel slices.
     #' @param size_k Single integer, `>= 1`.
+    #' @return The `SlicePackage` object, invisibly (for chaining).
     set_size_k = function(size_k) {
       private$set_size_k_impl(size_k)
       private$invalidate_cache()
@@ -819,6 +867,7 @@ SlicePackage <- R6::R6Class(
 
     #' @description Replace the base (`k = 0`) slice.
     #' @param base_slice A [SliceGeometry] object.
+    #' @return The `SlicePackage` object, invisibly (for chaining).
     set_base_slice = function(base_slice) {
       private$set_base_slice_impl(base_slice)
       private$invalidate_cache()
@@ -827,6 +876,7 @@ SlicePackage <- R6::R6Class(
 
     #' @description Update the full 3D spacing at once.
     #' @param spacing Numeric length-3 vector, `c(spacing_i, spacing_j, spacing_k)`.
+    #' @return The `SlicePackage` object, invisibly (for chaining).
     set_spacing = function(spacing) {
       if (!is.numeric(spacing) || length(spacing) != 3) {
         stop("`spacing` must be a numeric length-3 vector.", call. = FALSE)
@@ -839,6 +889,7 @@ SlicePackage <- R6::R6Class(
 
     #' @description Update the full 3D size at once.
     #' @param size Integer-valued length-3 vector, `c(n_i, n_j, n_k)`.
+    #' @return The `SlicePackage` object, invisibly (for chaining).
     set_size = function(size) {
       if (length(size) != 3) {
         stop("`size` must be an integer-valued length-3 vector.", call. = FALSE)
@@ -851,6 +902,7 @@ SlicePackage <- R6::R6Class(
 
     #' @description Print a short summary of the package's geometry.
     #' @param ... Unused; present for compatibility with the generic `print()`.
+    #' @return The `SlicePackage` object, invisibly.
     print = function(...) {
       cat("<SlicePackage>\n")
       cat("  size:        ", paste(self$get_size(), collapse = ", "), "\n")
@@ -947,19 +999,35 @@ SlicePackage$from_center_k <- function(center_slice, spacing_k, size_k) {
 #' direction/spacing/size and that consecutive slices (in the order given)
 #' are evenly spaced along their shared normal.
 #'
-#' @param slices A list of 2 or more [SliceGeometry] objects, ordered from `k = 0` onward.
+#' @param slices A list of 1 or more [SliceGeometry] objects, ordered from `k = 0` onward.
+#' @param spacing_k Only used (and required) when `slices` has exactly one
+#'   element, where it cannot be inferred from the data (there is no second
+#'   slice to measure a gap against). Ignored when `slices` has 2 or more
+#'   elements, where `spacing_k` is always derived from their spacing.
 #' @return A new `SlicePackage`.
 #' @rdname SlicePackage
 #' @name SlicePackage_from_slices
-SlicePackage$from_slices <- function(slices) {
-  if (!is.list(slices) || length(slices) < 2) {
-    stop("`slices` must be a list of at least 2 `SliceGeometry` objects.", call. = FALSE)
+SlicePackage$from_slices <- function(slices, spacing_k = NULL) {
+  if (!is.list(slices) || length(slices) < 1) {
+    stop("`slices` must be a list of at least 1 `SliceGeometry` object.", call. = FALSE)
   }
   if (!all(vapply(slices, inherits, logical(1), what = "SliceGeometry"))) {
     stop("Every element of `slices` must be a `SliceGeometry` object.", call. = FALSE)
   }
 
   base <- slices[[1]]
+
+  if (length(slices) == 1) {
+    if (is.null(spacing_k)) {
+      stop(
+        "`spacing_k` must be supplied explicitly when `slices` has only one element ",
+        "(there is no second slice to infer spacing from).",
+        call. = FALSE
+      )
+    }
+    return(SlicePackage$new(base_slice = base, spacing_k = spacing_k, size_k = 1))
+  }
+
   ref_direction <- base$get_direction()
   ref_spacing <- base$get_spacing()
   ref_size <- base$get_size()
@@ -1012,6 +1080,7 @@ SlicePackage$from_slices <- function(slices) {
 #' @rdname SlicePackage
 #' @name SlicePackage_from_image_axis
 SlicePackage$from_image_axis <- function(image, axis) {
+  check_sitk_image(image)
   if (image$GetDimension() != 3) {
     stop("`image` must be a 3D image.", call. = FALSE)
   }
@@ -1019,6 +1088,10 @@ SlicePackage$from_image_axis <- function(image, axis) {
 
   size_full <- image$GetSize()
   spacing_full <- image$GetSpacing()
+  # Pass the *original* `axis` through (not axis_index): SliceGeometry$from_image_axis
+  # does its own resolution, and axis_index here is already 0-indexed... no, in R
+  # both are 1-indexed and this call is safely idempotent, but we still pass the
+  # original `axis` for clarity/consistency with the Python port (see geometry.py).
   base <- SliceGeometry$from_image_axis(image, axis_index, coordinate = image$GetOrigin()[axis_index])
 
   SlicePackage$new(base_slice = base, spacing_k = spacing_full[axis_index], size_k = size_full[axis_index])
@@ -1065,20 +1138,24 @@ SlicePackageSet <- R6::R6Class(
 
     #' @description Create a new `SlicePackageSet`.
     #' @param packages A named list of [SlicePackage] objects (may be empty; add more later with `set_package()`).
+    #' @return A new `SlicePackageSet` object.
     initialize = function(packages = list()) {
       private$set_packages_impl(packages)
     },
 
     #' @description The underlying named list of `SlicePackage` objects.
+    #' @return A named list of [SlicePackage] objects (possibly empty).
     get_packages = function() private$packages_,
 
     #' @description Names of the packages in this set.
+    #' @return Character vector (possibly empty).
     get_package_names = function() names(private$packages_),
 
     #' @description Add (or replace) a package.
     #' @param name Single non-empty string identifying the package.
     #' @param package A `SlicePackage` object, or a bare [SliceGeometry]
     #'   (automatically wrapped as a single-slice package).
+    #' @return The `SlicePackageSet` object, invisibly (for chaining).
     set_package = function(name, package) {
       if (!is.character(name) || length(name) != 1 || !nzchar(name)) {
         stop("`name` must be a single non-empty string.", call. = FALSE)
@@ -1093,6 +1170,7 @@ SlicePackageSet <- R6::R6Class(
 
     #' @description Remove a package by name.
     #' @param name Single string.
+    #' @return The `SlicePackageSet` object, invisibly (for chaining).
     remove_package = function(name) {
       private$packages_[[name]] <- NULL
       invisible(self)
@@ -1100,6 +1178,7 @@ SlicePackageSet <- R6::R6Class(
 
     #' @description Replace the entire named list of packages at once.
     #' @param packages A named list of [SlicePackage] objects (may be empty).
+    #' @return The `SlicePackageSet` object, invisibly (for chaining).
     set_packages = function(packages) {
       private$set_packages_impl(packages)
       invisible(self)
@@ -1108,6 +1187,7 @@ SlicePackageSet <- R6::R6Class(
     #' @description Rename a package without removing/re-adding it.
     #' @param old_name Single string: the package's current name.
     #' @param new_name Single string: its new name. Must not already be in use.
+    #' @return The `SlicePackageSet` object, invisibly (for chaining).
     rename_package = function(old_name, new_name) {
       if (!old_name %in% names(private$packages_)) {
         stop("No package named `", old_name, "` in this set.", call. = FALSE)
@@ -1122,6 +1202,8 @@ SlicePackageSet <- R6::R6Class(
 
     #' @description Combined sample points across every package, as a tibble
     #'   with columns `package, i, j, k, x, y, z`.
+    #' @return A tibble with columns `package` (character), `i`, `j`, `k`
+    #'   (integer, 0-indexed) and `x`, `y`, `z` (numeric world coordinates).
     get_sample_points = function() {
       pkgs <- private$packages_
       if (length(pkgs) == 0) {
@@ -1150,7 +1232,12 @@ SlicePackageSet <- R6::R6Class(
     #'   `list(t = 0:9)` for a 4D image with 10 time points). Every
     #'   combination is sampled. Must be an empty list if `image` is 3D.
     #' @param interpolator SimpleITK interpolator name, passed to each package's `sample_intensity()`.
+    #' @return A tibble with columns `package` (character), one column per
+    #'   name in `extra_index` (if any), `i`, `j`, `k` (integer, 0-indexed),
+    #'   `x`, `y`, `z` (numeric world coordinates), and `intensity` (numeric,
+    #'   `NA` outside `image`'s bounds).
     sample_intensity = function(image, extra_index = list(), interpolator = "sitkLinear") {
+      check_sitk_image(image)
       dim <- image$GetDimension()
       if (dim < 3 || dim > 5) {
         stop("`image` must have dimension 3, 4, or 5.", call. = FALSE)
@@ -1213,6 +1300,7 @@ SlicePackageSet <- R6::R6Class(
 
     #' @description Print a short summary of every package in the set.
     #' @param ... Unused; present for compatibility with the generic `print()`.
+    #' @return The `SlicePackageSet` object, invisibly.
     print = function(...) {
       pkgs <- private$packages_
       cat("<SlicePackageSet>\n")
@@ -1274,6 +1362,7 @@ SlicePackageSet <- R6::R6Class(
 #' @rdname SlicePackageSet
 #' @name SlicePackageSet_from_orthogonal_triplet
 SlicePackageSet$from_orthogonal_triplet <- function(image, coordinates) {
+  check_sitk_image(image)
   if (is.null(names(coordinates)) || any(!nzchar(names(coordinates)))) {
     stop("`coordinates` must be a fully named list or vector.", call. = FALSE)
   }
@@ -1293,5 +1382,29 @@ SlicePackageSet$from_orthogonal_triplet <- function(image, coordinates) {
     seen <- c(seen, canonical)
     packages[[canonical]] <- SliceGeometry$from_image_axis(image, axis_index, coordinates[[nm]])
   }
+  SlicePackageSet$new(packages)
+}
+
+#' @description
+#' Construct a `SlicePackageSet` from a plain (unnamed) list of
+#' [SlicePackage] objects — or a single one, not wrapped in a list — rather
+#' than a named list. Packages are auto-named `"package_1"`, `"package_2"`,
+#' etc., in the order given; use `set_packages()`/`rename_package()`
+#' afterward for more meaningful names.
+#'
+#' @param packages A [SlicePackage] object, a bare [SliceGeometry] object
+#'   (auto-wrapped as a single-slice package, exactly as in the primary
+#'   constructor), or a list containing any mix of the two.
+#' @return A new `SlicePackageSet`.
+#' @rdname SlicePackageSet
+#' @name SlicePackageSet_from_slice_packages
+SlicePackageSet$from_slice_packages <- function(packages) {
+  if (inherits(packages, "SlicePackage") || inherits(packages, "SliceGeometry")) {
+    packages <- list(packages)
+  }
+  if (!is.list(packages)) {
+    stop("`packages` must be a `SlicePackage`, a `SliceGeometry`, or a list of them.", call. = FALSE)
+  }
+  names(packages) <- paste0("package_", seq_along(packages))
   SlicePackageSet$new(packages)
 }

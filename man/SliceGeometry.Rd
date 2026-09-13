@@ -160,6 +160,9 @@ two of its edges).
     }
     \if{html}{\out{</div>}}
   }
+  \subsection{Returns}{
+    A new \code{SliceGeometry} object.
+  }
 }
 
 \if{html}{\out{<hr>}}
@@ -171,6 +174,9 @@ two of its edges).
     \if{html}{\out{<div class="r">}}
     \preformatted{SliceGeometry$get_origin()}
     \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    Numeric length-3 vector.
   }
 }
 
@@ -184,6 +190,9 @@ two of its edges).
     \preformatted{SliceGeometry$get_direction()}
     \if{html}{\out{</div>}}
   }
+  \subsection{Returns}{
+    Numeric 3x2 matrix.
+  }
 }
 
 \if{html}{\out{<hr>}}
@@ -195,6 +204,9 @@ two of its edges).
     \if{html}{\out{<div class="r">}}
     \preformatted{SliceGeometry$get_direction_i()}
     \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    Numeric length-3 unit vector.
   }
 }
 
@@ -208,6 +220,9 @@ two of its edges).
     \preformatted{SliceGeometry$get_direction_j()}
     \if{html}{\out{</div>}}
   }
+  \subsection{Returns}{
+    Numeric length-3 unit vector.
+  }
 }
 
 \if{html}{\out{<hr>}}
@@ -219,6 +234,9 @@ two of its edges).
     \if{html}{\out{<div class="r">}}
     \preformatted{SliceGeometry$get_spacing()}
     \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    Numeric length-2 vector.
   }
 }
 
@@ -232,6 +250,9 @@ two of its edges).
     \preformatted{SliceGeometry$get_size()}
     \if{html}{\out{</div>}}
   }
+  \subsection{Returns}{
+    Integer length-2 vector.
+  }
 }
 
 \if{html}{\out{<hr>}}
@@ -243,6 +264,9 @@ two of its edges).
     \if{html}{\out{<div class="r">}}
     \preformatted{SliceGeometry$get_normal()}
     \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    Numeric length-3 unit vector.
   }
 }
 
@@ -257,6 +281,10 @@ finite extent: \code{list(point, normal)}.
     \preformatted{SliceGeometry$get_plane()}
     \if{html}{\out{</div>}}
   }
+  \subsection{Returns}{
+    A list with elements \code{point} (numeric length-3 vector) and
+\code{normal} (numeric length-3 unit vector).
+  }
 }
 
 \if{html}{\out{<hr>}}
@@ -268,6 +296,9 @@ finite extent: \code{list(point, normal)}.
     \if{html}{\out{<div class="r">}}
     \preformatted{SliceGeometry$get_extent()}
     \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    Numeric length-2 vector.
   }
 }
 
@@ -281,6 +312,9 @@ finite extent: \code{list(point, normal)}.
     \preformatted{SliceGeometry$get_center()}
     \if{html}{\out{</div>}}
   }
+  \subsection{Returns}{
+    Numeric length-3 vector.
+  }
 }
 
 \if{html}{\out{<hr>}}
@@ -293,6 +327,10 @@ rectangle, as a tibble.
     \if{html}{\out{<div class="r">}}
     \preformatted{SliceGeometry$get_bounds()}
     \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A tibble with columns \code{corner} (one of \code{"i0_j0"}, \code{"i1_j0"},
+\code{"i0_j1"}, \code{"i1_j1"}), \code{x}, \code{y}, \code{z}.
   }
 }
 
@@ -308,6 +346,10 @@ memoized and recomputed only after a setter changes the geometry.
     \if{html}{\out{<div class="r">}}
     \preformatted{SliceGeometry$get_sample_points()}
     \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A tibble with one row per sample point and columns \code{i}, \code{j}
+(integer, 0-indexed) and \code{x}, \code{y}, \code{z} (numeric world coordinates).
   }
 }
 
@@ -327,6 +369,9 @@ memoized and recomputed only after a setter changes the geometry.
       \item{\code{origin}}{Numeric length-3 vector.}
     }
     \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    The \code{SliceGeometry} object, invisibly (for chaining).
   }
 }
 
@@ -348,6 +393,9 @@ memoized and recomputed only after a setter changes the geometry.
     }
     \if{html}{\out{</div>}}
   }
+  \subsection{Returns}{
+    The \code{SliceGeometry} object, invisibly (for chaining).
+  }
 }
 
 \if{html}{\out{<hr>}}
@@ -367,6 +415,9 @@ memoized and recomputed only after a setter changes the geometry.
     }
     \if{html}{\out{</div>}}
   }
+  \subsection{Returns}{
+    The \code{SliceGeometry} object, invisibly (for chaining).
+  }
 }
 
 \if{html}{\out{<hr>}}
@@ -385,6 +436,9 @@ memoized and recomputed only after a setter changes the geometry.
       \item{\code{size}}{Integer-valued length-2 vector, both entries \verb{>= 1}.}
     }
     \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    The \code{SliceGeometry} object, invisibly (for chaining).
   }
 }
 
@@ -406,6 +460,9 @@ keeping direction, spacing, and size unchanged (updates \code{origin}).
     }
     \if{html}{\out{</div>}}
   }
+  \subsection{Returns}{
+    The \code{SliceGeometry} object, invisibly (for chaining).
+  }
 }
 
 \if{html}{\out{<hr>}}
@@ -424,6 +481,9 @@ keeping direction, spacing, and size unchanged (updates \code{origin}).
       \item{\code{spacing_i}}{Single number, \verb{> 0}.}
     }
     \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    The \code{SliceGeometry} object, invisibly (for chaining).
   }
 }
 
@@ -444,6 +504,9 @@ keeping direction, spacing, and size unchanged (updates \code{origin}).
     }
     \if{html}{\out{</div>}}
   }
+  \subsection{Returns}{
+    The \code{SliceGeometry} object, invisibly (for chaining).
+  }
 }
 
 \if{html}{\out{<hr>}}
@@ -463,6 +526,9 @@ keeping direction, spacing, and size unchanged (updates \code{origin}).
     }
     \if{html}{\out{</div>}}
   }
+  \subsection{Returns}{
+    The \code{SliceGeometry} object, invisibly (for chaining).
+  }
 }
 
 \if{html}{\out{<hr>}}
@@ -481,6 +547,9 @@ keeping direction, spacing, and size unchanged (updates \code{origin}).
       \item{\code{size_j}}{Single integer, \verb{>= 1}.}
     }
     \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    The \code{SliceGeometry} object, invisibly (for chaining).
   }
 }
 
@@ -507,6 +576,9 @@ resolution).}
     }
     \if{html}{\out{</div>}}
   }
+  \subsection{Returns}{
+    The \code{SliceGeometry} object, invisibly (for chaining).
+  }
 }
 
 \if{html}{\out{<hr>}}
@@ -527,6 +599,9 @@ to move to the next parallel slice in a stack).
       \item{\code{offset}}{Numeric length-3 vector.}
     }
     \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A new \code{SliceGeometry} object.
   }
 }
 
@@ -550,6 +625,10 @@ argument to \code{SimpleITK::Resample()} for extracting intensities.
     }
     \if{html}{\out{</div>}}
   }
+  \subsection{Returns}{
+    A \code{SimpleITK} image object of size \verb{(n_i, n_j, 1)}, with no
+pixel data set (all zeros).
+  }
 }
 
 \if{html}{\out{<hr>}}
@@ -568,6 +647,9 @@ argument to \code{SimpleITK::Resample()} for extracting intensities.
       \item{\code{...}}{Unused; present for compatibility with the generic \code{print()}.}
     }
     \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    The \code{SliceGeometry} object, invisibly.
   }
 }
 

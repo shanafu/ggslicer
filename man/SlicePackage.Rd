@@ -15,11 +15,14 @@ the last slice). \code{spacing_k} is derived as \code{extent_k / (size_k - 1)}.}
 
 \item{center_slice}{A \link{SliceGeometry} object: the slice at the middle of the stack.}
 
-\item{spacing_k}{Step size along the normal direction. Must be \verb{> 0}.}
-
 \item{size_k}{Number of parallel slices in the stack. Must be \verb{>= 1}.}
 
-\item{slices}{A list of 2 or more \link{SliceGeometry} objects, ordered from \code{k = 0} onward.}
+\item{slices}{A list of 1 or more \link{SliceGeometry} objects, ordered from \code{k = 0} onward.}
+
+\item{spacing_k}{Only used (and required) when \code{slices} has exactly one
+element, where it cannot be inferred from the data (there is no second
+slice to measure a gap against). Ignored when \code{slices} has 2 or more
+elements, where \code{spacing_k} is always derived from their spacing.}
 
 \item{image}{A 3D \code{SimpleITK} image.}
 
@@ -102,6 +105,9 @@ of its axes, using the image's own resolution along that axis — the
     }
     \if{html}{\out{</div>}}
   }
+  \subsection{Returns}{
+    A new \code{SlicePackage} object.
+  }
 }
 
 \if{html}{\out{<hr>}}
@@ -117,6 +123,9 @@ silently desynchronize this package's cached sample points; use
     \preformatted{SlicePackage$get_base_slice()}
     \if{html}{\out{</div>}}
   }
+  \subsection{Returns}{
+    A new, independent \link{SliceGeometry} object.
+  }
 }
 
 \if{html}{\out{<hr>}}
@@ -128,6 +137,9 @@ silently desynchronize this package's cached sample points; use
     \if{html}{\out{<div class="r">}}
     \preformatted{SlicePackage$get_spacing_k()}
     \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    Single number.
   }
 }
 
@@ -141,6 +153,9 @@ silently desynchronize this package's cached sample points; use
     \preformatted{SlicePackage$get_size_k()}
     \if{html}{\out{</div>}}
   }
+  \subsection{Returns}{
+    Single integer.
+  }
 }
 
 \if{html}{\out{<hr>}}
@@ -152,6 +167,9 @@ silently desynchronize this package's cached sample points; use
     \if{html}{\out{<div class="r">}}
     \preformatted{SlicePackage$get_spacing()}
     \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    Numeric length-3 vector.
   }
 }
 
@@ -165,6 +183,9 @@ silently desynchronize this package's cached sample points; use
     \preformatted{SlicePackage$get_size()}
     \if{html}{\out{</div>}}
   }
+  \subsection{Returns}{
+    Integer length-3 vector.
+  }
 }
 
 \if{html}{\out{<hr>}}
@@ -176,6 +197,9 @@ silently desynchronize this package's cached sample points; use
     \if{html}{\out{<div class="r">}}
     \preformatted{SlicePackage$get_normal()}
     \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    Numeric length-3 unit vector.
   }
 }
 
@@ -196,6 +220,9 @@ silently desynchronize this package's cached sample points; use
     }
     \if{html}{\out{</div>}}
   }
+  \subsection{Returns}{
+    A new \link{SliceGeometry} object.
+  }
 }
 
 \if{html}{\out{<hr>}}
@@ -210,6 +237,10 @@ as a tibble with columns \verb{i, j, k, x, y, z}. Memoized like
     \preformatted{SlicePackage$get_sample_points()}
     \if{html}{\out{</div>}}
   }
+  \subsection{Returns}{
+    A tibble with one row per sample point and columns \code{i}, \code{j},
+\code{k} (integer, 0-indexed) and \code{x}, \code{y}, \code{z} (numeric world coordinates).
+  }
 }
 
 \if{html}{\out{<hr>}}
@@ -223,6 +254,10 @@ the whole stack in a single geometry, suitable as the
     \if{html}{\out{<div class="r">}}
     \preformatted{SlicePackage$as_sitk_reference_image()}
     \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A \code{SimpleITK} image object of size \verb{(n_i, n_j, n_k)}, with no
+pixel data set (all zeros).
   }
 }
 
@@ -247,6 +282,10 @@ the source image's bounds).
     }
     \if{html}{\out{</div>}}
   }
+  \subsection{Returns}{
+    A tibble: \code{get_sample_points()}'s columns (\code{i}, \code{j}, \code{k}, \code{x},
+\code{y}, \code{z}) plus \code{intensity} (numeric, \code{NA} outside \code{image}'s bounds).
+  }
 }
 
 \if{html}{\out{<hr>}}
@@ -265,6 +304,9 @@ the source image's bounds).
       \item{\code{spacing_k}}{Single number, \verb{> 0}.}
     }
     \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    The \code{SlicePackage} object, invisibly (for chaining).
   }
 }
 
@@ -285,6 +327,9 @@ the source image's bounds).
     }
     \if{html}{\out{</div>}}
   }
+  \subsection{Returns}{
+    The \code{SlicePackage} object, invisibly (for chaining).
+  }
 }
 
 \if{html}{\out{<hr>}}
@@ -303,6 +348,9 @@ the source image's bounds).
       \item{\code{base_slice}}{A \link{SliceGeometry} object.}
     }
     \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    The \code{SlicePackage} object, invisibly (for chaining).
   }
 }
 
@@ -323,6 +371,9 @@ the source image's bounds).
     }
     \if{html}{\out{</div>}}
   }
+  \subsection{Returns}{
+    The \code{SlicePackage} object, invisibly (for chaining).
+  }
 }
 
 \if{html}{\out{<hr>}}
@@ -342,6 +393,9 @@ the source image's bounds).
     }
     \if{html}{\out{</div>}}
   }
+  \subsection{Returns}{
+    The \code{SlicePackage} object, invisibly (for chaining).
+  }
 }
 
 \if{html}{\out{<hr>}}
@@ -360,6 +414,9 @@ the source image's bounds).
       \item{\code{...}}{Unused; present for compatibility with the generic \code{print()}.}
     }
     \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    The \code{SlicePackage} object, invisibly.
   }
 }
 
