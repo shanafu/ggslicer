@@ -9,6 +9,7 @@ Description: Functions that allow for efficient wrangling of imaging data into
     intensity data at each coordinate.
 Imports:
     dplyr,
+    grDevices,
     magrittr,
     pbapply,
     R6,
