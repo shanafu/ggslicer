@@ -185,12 +185,21 @@ slice_grid <- function(image = NULL, axis = NULL, coordinate = NULL,
 #' library(ggplot2)
 #' ggplot(grid_df, aes(x = x, y = y)) + layers$box + layers$grid
 #' }
+#' @importFrom rlang .data
 #' @export
 slice_grid_layers <- function(grid_df,
                                box_color = "orange", box_linewidth = 1, box_alpha = 1,
                                grid_color = "#FF6666", grid_linewidth = 0.25, grid_alpha = 0.8) {
+  # Use the unqualified `.data` pronoun here, not `rlang::.data` -- confirmed
+  # directly (see CLAUDE.md) that ggplot2's tidy-eval data mask only
+  # special-cases the bare `.data` symbol; `rlang::.data$x` parses to a `::`
+  # call that isn't recognized the same way and throws "Can't subset `.data`
+  # outside of a data mask context" the moment the plot is actually built
+  # (not merely constructed) -- a real, previously-undetected bug this
+  # project's own tests never caught because they never called
+  # ggplot2::ggplot_build() on the result.
   group_mapping <- ggplot2::aes(group = interaction(
-    rlang::.data$package, rlang::.data$k, rlang::.data$grid_axis, rlang::.data$line_id
+    .data$package, .data$k, .data$grid_axis, .data$line_id
   ))
 
   box_layer <- ggplot2::geom_path(

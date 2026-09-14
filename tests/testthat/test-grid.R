@@ -130,4 +130,11 @@ test_that("slice_grid_layers() returns two styled geom_path layers that build in
 
   plt <- ggplot2::ggplot(grid_df, ggplot2::aes(x = x, y = y)) + layers$box + layers$grid
   expect_s3_class(plt, "ggplot")
+
+  # Actually build the plot, not just construct the object -- this is what
+  # caught a real, previously-undetected bug (an `rlang::.data$x`-qualified
+  # aes() mapping that only fails once the aesthetics are actually computed,
+  # not when the plot object is merely assembled).
+  built <- ggplot2::ggplot_build(plt)
+  expect_s3_class(built, "ggplot_built")
 })
