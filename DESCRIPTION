@@ -16,6 +16,7 @@ Imports:
     R6,
     rlang,
     SimpleITK,
+    stats,
     tibble,
     tools
 License: MIT + file LICENSE

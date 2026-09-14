@@ -40,11 +40,10 @@ discrete_data_names <- function() {
 
 # Resolve which interpolator to use for an image given its name: nearest-
 # neighbor if any whole token of `name` matches `discrete_names`
-# (case-insensitively), otherwise `interpolator` unchanged.
+# (case-insensitively; see .matches_discrete_name() in utils.R, shared with
+# suggest_contour_levels()), otherwise `interpolator` unchanged.
 .resolve_interpolator <- function(name, interpolator, discrete_names) {
-  tokens <- strsplit(tolower(name), "[^A-Za-z0-9]+")[[1]]
-  tokens <- tokens[nzchar(tokens)]
-  if (any(tokens %in% tolower(discrete_names))) {
+  if (.matches_discrete_name(name, discrete_names)) {
     return("sitkNearestNeighbor")
   }
   interpolator
