@@ -14,10 +14,12 @@ A \code{SimpleITK} image.
 }
 \description{
 Reads \code{file} via \code{SimpleITK::ReadImage()}. If \code{file} is a MINC file
-(\code{.mnc}/\code{.minc}), also applies \code{\link[=orientation_correction]{orientation_correction()}} and records the
-original MINC direction matrix and file type as image metadata
-(\code{OriginalFileType}, \code{OriginalDirection}), so \code{\link[=WriteImage_fix]{WriteImage_fix()}} can later
-undo the correction if writing back out to MINC or another format.
+(\code{.mnc}/\code{.minc}), also applies \code{\link[=orientation_correction]{orientation_correction()}} so that its
+\code{origin}/\code{direction} describe the same real-world locations an
+independently-converted NIfTI file of the same anatomy would (see that
+function's docs for why this is needed at all). The corrected image is
+tagged with \code{OriginalFileType} metadata (\code{"MINC"} or \code{"Other"}) so
+\code{\link[=WriteImage_fix]{WriteImage_fix()}} knows whether to undo the correction on write.
 }
 \examples{
 \dontrun{

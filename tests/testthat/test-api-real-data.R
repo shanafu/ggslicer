@@ -41,21 +41,22 @@ test_that("slice_image() works correctly on both MINC- and NIfTI-loaded versions
   skip_if_not_installed("SimpleITK")
   skip_if_no_testdata()
 
-  # Note: ReadImage_fix()'s orientation_correction() is a display-orientation
-  # fix (it mirrors the pixel data and derives a new origin from the volume's
-  # own extent), not a true world-coordinate registration between formats. For
-  # this fixture, the MINC-corrected origin and the NIfTI file's own stored
-  # origin genuinely differ by more than a rounding error along y (the brain
-  # isn't vertically centered in the volume), so the two are not expected to
-  # land on identical world coordinates for the same nominal slice — only
-  # verified here is that both load into a consistent RAS+ (positive x/y)
-  # orientation and sample correctly through the new high-level API.
+  # ReadImage_fix()'s orientation_correction() corrects MINC's header
+  # (origin/direction) so it describes the same real-world locations an
+  # independently-converted NIfTI file of the same anatomy does -- verified
+  # directly (mincheader/fslhd ground truth; see CLAUDE.md and test-io.R)
+  # that this now matches *exactly*, not just in sign convention. An earlier
+  # version of this test/comment assumed a genuine, expected mismatch here
+  # ("the brain isn't vertically centered") -- that was actually the bug
+  # this fix addresses, not a real anatomical asymmetry.
   base <- file.path(testdata_dir(), "human_1")
   mnc <- ReadImage_fix(file.path(base, "mni_icbm152_t1_tal_nlin_sym_09b_hires.mnc"))
   nii <- ReadImage_fix(file.path(base, "mni_icbm152_t1_tal_nlin_sym_09b_hires.nii"))
 
   expect_true(all(mnc$GetOrigin()[1:2] > 0))
   expect_true(all(nii$GetOrigin()[1:2] > 0))
+  expect_equal(mnc$GetOrigin(), nii$GetOrigin())
+  expect_equal(mnc$GetDirection(), nii$GetDirection())
 
   out_mnc <- slice_image(mnc, axis = "axial", coordinate = mnc$GetOrigin()[3])
   out_nii <- slice_image(nii, axis = "axial", coordinate = nii$GetOrigin()[3])
@@ -64,6 +65,12 @@ test_that("slice_image() works correctly on both MINC- and NIfTI-loaded versions
   expect_equal(nrow(out_nii), 394 * 466)
   expect_false(all(is.na(out_mnc$value)))
   expect_false(all(is.na(out_nii$value)))
+
+  # since the two now share identical geometry, sampling the same nominal
+  # slice should give near-identical intensities (nearest-neighbor-ish
+  # agreement; small differences are possible from independent MINC/NIfTI
+  # interpolation/precision, not orientation).
+  expect_gt(cor(out_mnc$value, out_nii$value, use = "complete.obs"), 0.999)
 })
 
 test_that("mouse_1's mask column is usable for tidy-side filtering (dplyr::filter())", {

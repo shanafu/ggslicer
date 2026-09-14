@@ -2,7 +2,7 @@
 % Please edit documentation in R/io.R
 \name{orientation_correction}
 \alias{orientation_correction}
-\title{Flip a MINC image's x/y orientation for display, preserving pixel data}
+\title{Convert a MINC image's header between MINC-native and RAS/LPS-consistent orientation}
 \usage{
 orientation_correction(image)
 }
@@ -10,27 +10,51 @@ orientation_correction(image)
 \item{image}{A \code{SimpleITK} image.}
 }
 \value{
-The flipped \code{SimpleITK} image, with \code{OriginalFileType} metadata
+A new, independent \code{SimpleITK} image (the input is not modified)
+with \code{origin}/\code{direction} corrected, and \code{OriginalFileType} metadata
 copied over if present.
 }
 \description{
-MINC files, when read via \code{SimpleITK}, often have direction cosines that
-are the mirror image of what a NIfTI conversion of the same anatomy would
-show. This flips the pixel data along x/y (via \code{SimpleITK::FlipImageFilter()})
-and recomputes the origin so the image occupies the same physical bounding
-box, mirrored — a display-orientation fix, not a coordinate registration
-between formats (it does not, and is not meant to, make a MINC-read image's
-world coordinates numerically match an independently-converted NIfTI file
-of the same anatomy; see the geometry-model notes in \code{CLAUDE.md} for the
-real-data investigation confirming this).
+\code{SimpleITK::ReadImage()} handles NIfTI's stored orientation correctly: NIfTI
+files conventionally store their qform/sform in a right-handed
+Right-Anterior-Superior (RAS) convention, and SimpleITK converts this to
+ITK's own internal Left-Posterior-Superior (LPS) convention on read (by
+negating x/y), exactly as it does for DICOM. It does \strong{not} perform the
+equivalent conversion for MINC: a MINC file's own dimension metadata
+(confirmed directly via \code{mincheader}/\code{mincinfo}, and by reading a MINC2
+file's HDF5 structure directly, bypassing SimpleITK entirely) already
+describes a RAS-like convention (e.g. \code{xspace}'s comment
+"X increases from patient left to right", \code{yspace}'s
+"Y increases from patient posterior to anterior", with positive
+\code{direction_cosines} and a positive \code{step}) — but SimpleITK reports this
+completely unconverted (direction reported as identity, origin exactly as
+stored), leaving MINC-read images in a different, inconsistent coordinate
+convention from NIfTI-read images of the very same anatomy.
 
-\code{z} is never flipped. Used by both \code{\link[=ReadImage_fix]{ReadImage_fix()}} (to correct on read)
-and \code{\link[=WriteImage_fix]{WriteImage_fix()}} (to undo the correction on write, for MINC output).
+This function performs the missing conversion directly on the image's
+header (origin and direction), by negating their \code{x}/\code{y} components (\code{z}
+is never touched) — equivalent to left-multiplying both by
+\code{diag(-1, -1, 1)}. \strong{The pixel array is never reordered or copied in any
+way that changes voxel content} — confirmed directly (comparing raw MINC
+and NIfTI conversions of the same anatomy, for multiple real fixtures)
+that the array is already in the same index order in both formats; only
+the header's own description of that array's orientation was wrong for
+MINC. This is a correction, not a data transformation, and it is its own
+inverse: applying it twice returns the exact original header.
+
+(This function used to flip the pixel data via
+\code{SimpleITK::FlipImageFilter()} and recompute the origin from the volume's
+own bounding box. That was a real, confirmed bug: since the array never
+needed reordering, physically flipping it produced an image whose header
+was self-consistent but did not describe the same real-world locations as
+an independently-converted NIfTI file of the same anatomy — verified
+directly to disagree by tens of millimeters along \code{y} for a real fixture.
+See \code{CLAUDE.md} for the full investigation, evidence, and fix.)
 }
 \examples{
 \dontrun{
 image <- SimpleITK::ReadImage("brain_image.mnc")
-flipped <- orientation_correction(image)
+corrected <- orientation_correction(image)
 }
 }
 \keyword{internal}

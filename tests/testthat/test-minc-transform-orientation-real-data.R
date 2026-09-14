@@ -1,23 +1,29 @@
-# Regression test for a specific question: does applying a MINC (.xfm-derived)
-# transform to world points coming from ReadImage_fix()-corrected images suffer
-# from the same x/y axis-flip issue that orientation_correction() corrects for
-# when *reading* MINC images?
+# Regression test for a real bug and its fix: does a MINC (.xfm-derived)
+# transform correctly apply to world points coming from ReadImage_fix()-
+# corrected images?
 #
-# Investigated directly (not assumed) using mouse_5's real registration outputs,
-# which conveniently include ground truth: DSURQE_40micron_labels_on_CCFv3_25um.mnc
-# is mouse_1's DSURQE labels already correctly warped onto CCFv3 space by the
-# real MINC registration pipeline. Finding: NO axis-flip bug -- ITK's physical-
-# point machinery (origin/direction/spacing) is self-consistent, so a world
-# coordinate means the same physical location whether it came from a raw or a
-# ReadImage_fix()-corrected reading of a MINC file; a transform defined in terms
-# of physical points (an affine matrix, or a DisplacementFieldTransform built
-# from a *plainly* read displacement-field volume -- never pass it through
-# ReadImage_fix()) works correctly on either. This test guards that property
-# with real data: several distinct anatomical labels from mouse_1, each
-# transformed through mouse_5's real affine+grid transform, must land on the
-# *same* label in the real, independently-computed ground-truth CCFv3-space
-# labels.
-test_that("a MINC transform applied to ReadImage_fix() points has no axis-flip bug", {
+# History: an earlier version of this file concluded "no axis-flip bug"
+# based on this same 8-real-label round trip passing under the *old*,
+# now-removed FlipImageFilter-based orientation_correction(). That
+# conclusion was incomplete: the old correction's images were themselves
+# wrong (confirmed separately -- see test-io.R and CLAUDE.md -- against
+# real MINC/NIfTI ground truth via mincheader/fslhd), but happened to
+# combine with *raw* (unconverted) .xfm transforms in a way that still
+# produced correct results for this specific fixture's geometry -- not a
+# general guarantee.
+#
+# The real, verified picture (see CLAUDE.md for the full investigation):
+# a .xfm file's own matrix/displacement values are defined in MINC's
+# *native* coordinate convention (confirmed directly: they only reproduce
+# real registered anatomy when applied to points from *plainly*-read MINC
+# images, not ReadImage_fix()-corrected ones). ReadImage_fix()-corrected
+# images, however, use a different (RAS/LPS-consistent) convention. These
+# two conventions are related by a fixed, known operation (negate x/y,
+# leave z), so read_minc_transform()'s default (corrected = TRUE) conjugates
+# the parsed transform by that same operation, making it correct for points
+# from ReadImage_fix()-corrected images -- which is what every function in
+# this package actually produces.
+test_that("read_minc_transform()'s default correctly transforms points from ReadImage_fix()-corrected images", {
   skip_if_not_installed("SimpleITK")
   skip_if_no_testdata()
 
@@ -28,25 +34,10 @@ test_that("a MINC transform applied to ReadImage_fix() points has no axis-flip b
   src_labels <- ReadImage_fix(file.path(m1, "DSURQE_40micron_labels.mnc"))
   target_labels <- ReadImage_fix(file.path(m5, "DSURQE_40micron_labels_on_CCFv3_25um.mnc"))
 
-  # A pure single-Linear-block .xfm parses correctly via SimpleITK::ReadTransform()
-  # (confirmed separately -- it's specifically multi-block/Grid_Transform .xfm
-  # files that ReadTransform() silently mis-parses).
-  linear <- SimpleITK::ReadTransform(file.path(m5, "affine", "MICe_DSURQE_affine.xfm"))
-
-  # The grid (displacement field) volume must be read *plainly*, never through
-  # ReadImage_fix() -- this is the one part of the pipeline that would actually
-  # break if handled naively (see CLAUDE.md for why, and why it turns out not
-  # to matter for the *lookup* itself but does matter as a documented rule).
-  grid_img <- SimpleITK::ReadImage(file.path(m5, "MICe_DSURQE_grid_0.mnc"), "sitkVectorFloat64")
-  grid <- SimpleITK::DisplacementFieldTransform(grid_img)
-
-  # File order is [Linear, Grid_Transform] (apply Linear first, then Grid);
-  # SimpleITK::CompositeTransform (R has no list-based constructor, unlike
-  # Python's CompositeTransform([...]) -- use AddTransform() instead) applies
-  # the *last*-added transform first, so add them in reverse: grid, then linear.
-  composite <- SimpleITK::CompositeTransform(3L)
-  composite$AddTransform(grid)
-  composite$AddTransform(linear)
+  # The single concatenated file (Linear + Grid_Transform, in that order);
+  # read_minc_transform()'s default corrected = TRUE conjugates the whole
+  # thing at once.
+  xfm <- read_minc_transform(file.path(m5, "MICe_DSURQE.xfm"))
 
   arr <- SimpleITK::as.array(src_labels) # (i, j, k) order, corrected convention
   tab <- table(arr)
@@ -62,7 +53,7 @@ test_that("a MINC transform applied to ReadImage_fix() points has no axis-flip b
     idx_xyz <- as.integer(mid - 1) # which() is 1-indexed; SimpleITK indices are 0-indexed
 
     world_point <- src_labels$TransformIndexToPhysicalPoint(idx_xyz)
-    transformed <- composite$TransformPoint(world_point)
+    transformed <- xfm$TransformPoint(world_point)
 
     got <- tryCatch(
       target_labels$GetPixel(target_labels$TransformPhysicalPointToIndex(transformed)),
@@ -75,4 +66,74 @@ test_that("a MINC transform applied to ReadImage_fix() points has no axis-flip b
   }
 
   expect_length(mismatches, 0)
+})
+
+test_that("the same real transform also works end-to-end on *plainly*-read (uncorrected) MINC images with corrected = FALSE", {
+  skip_if_not_installed("SimpleITK")
+  skip_if_no_testdata()
+
+  m1 <- file.path(testdata_dir(), "mouse_1")
+  m5 <- file.path(testdata_dir(), "mouse_5")
+
+  # Plain reads -- never through ReadImage_fix() -- paired with
+  # corrected = FALSE, i.e. the transform exactly as written in the file.
+  src_labels <- SimpleITK::ReadImage(file.path(m1, "DSURQE_40micron_labels.mnc"))
+  target_labels <- SimpleITK::ReadImage(file.path(m5, "DSURQE_40micron_labels_on_CCFv3_25um.mnc"))
+  xfm <- read_minc_transform(file.path(m5, "MICe_DSURQE.xfm"), corrected = FALSE)
+
+  arr <- SimpleITK::as.array(src_labels)
+  tab <- table(arr)
+  tab <- tab[names(tab) != "0"]
+  nonzero_labels <- as.numeric(names(sort(tab, decreasing = TRUE)))[1:8]
+
+  mismatches <- list()
+  for (label_value in nonzero_labels) {
+    coords <- which(arr == label_value, arr.ind = TRUE)
+    mid <- coords[ceiling(nrow(coords) / 2), ]
+    idx_xyz <- as.integer(mid - 1)
+    world_point <- src_labels$TransformIndexToPhysicalPoint(idx_xyz)
+    transformed <- xfm$TransformPoint(world_point)
+    got <- tryCatch(
+      target_labels$GetPixel(target_labels$TransformPhysicalPointToIndex(transformed)),
+      error = function(e) NA_real_
+    )
+    if (!isTRUE(all.equal(got, as.numeric(label_value)))) {
+      mismatches[[length(mismatches) + 1]] <- list(label = label_value, got = got)
+    }
+  }
+  expect_length(mismatches, 0)
+})
+
+test_that("mixing corrected and uncorrected conventions gives wrong results (confirms the conjugation is load-bearing, not a no-op)", {
+  skip_if_not_installed("SimpleITK")
+  skip_if_no_testdata()
+
+  m1 <- file.path(testdata_dir(), "mouse_1")
+  m5 <- file.path(testdata_dir(), "mouse_5")
+
+  # ReadImage_fix()-corrected images, but the RAW (unconjugated) transform --
+  # a genuine coordinate-convention mismatch.
+  src_labels <- ReadImage_fix(file.path(m1, "DSURQE_40micron_labels.mnc"))
+  target_labels <- ReadImage_fix(file.path(m5, "DSURQE_40micron_labels_on_CCFv3_25um.mnc"))
+  xfm_raw <- read_minc_transform(file.path(m5, "MICe_DSURQE.xfm"), corrected = FALSE)
+
+  arr <- SimpleITK::as.array(src_labels)
+  tab <- table(arr)
+  tab <- tab[names(tab) != "0"]
+  nonzero_labels <- as.numeric(names(sort(tab, decreasing = TRUE)))[1:8]
+
+  matches <- 0
+  for (label_value in nonzero_labels) {
+    coords <- which(arr == label_value, arr.ind = TRUE)
+    mid <- coords[ceiling(nrow(coords) / 2), ]
+    idx_xyz <- as.integer(mid - 1)
+    world_point <- src_labels$TransformIndexToPhysicalPoint(idx_xyz)
+    transformed <- xfm_raw$TransformPoint(world_point)
+    got <- tryCatch(
+      target_labels$GetPixel(target_labels$TransformPhysicalPointToIndex(transformed)),
+      error = function(e) NA_real_
+    )
+    if (isTRUE(all.equal(got, as.numeric(label_value)))) matches <- matches + 1
+  }
+  expect_equal(matches, 0)
 })

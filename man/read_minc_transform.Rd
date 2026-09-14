@@ -4,16 +4,34 @@
 \alias{read_minc_transform}
 \title{Read a MINC transform (\code{.xfm}) file as a SimpleITK transform}
 \usage{
-read_minc_transform(path)
+read_minc_transform(path, corrected = TRUE)
 }
 \arguments{
 \item{path}{Path to a \code{.xfm} file.}
+
+\item{corrected}{If \code{TRUE} (the default), the parsed transform is
+conjugated so it operates correctly on points from
+\code{\link[=ReadImage_fix]{ReadImage_fix()}}-corrected images — which is what every tidy data
+frame this package produces (\code{slice_image()}, \code{slice_grid()},
+\code{slice_contours()}, ...) actually contains. This matters because a
+\code{.xfm} file's own matrix/displacement values are defined in MINC's
+\emph{native} coordinate convention (the same one \code{\link[=orientation_correction]{orientation_correction()}}
+corrects images out of), not the corrected one — confirmed directly: a
+real registration transform applied to points from correctly-oriented
+images landed on the wrong anatomical label entirely without this
+conjugation, and matched exactly with it. Set \code{corrected = FALSE} to
+get the transform exactly as written in the file (its native-MINC
+form), e.g. to compare against another MINC-native tool's own
+computation, or to apply it directly to points from a plainly-read
+(not \code{ReadImage_fix()}-corrected) MINC image.}
 }
 \value{
-A \code{SimpleITK} transform: a single \code{AffineTransform} or
-\code{DisplacementFieldTransform} if \code{path} has exactly one block, or a
-\code{CompositeTransform} (applying the blocks in file order) if it has more
-than one.
+A \code{SimpleITK} transform. With \code{corrected = FALSE}: a single
+\code{AffineTransform} or \code{DisplacementFieldTransform} if \code{path} has exactly
+one block, or a \code{CompositeTransform} (applying the blocks in file
+order) if it has more than one. With \code{corrected = TRUE} (default): the
+same, wrapped in an outer \code{CompositeTransform} that conjugates it by a
+fixed x/y-negating \code{AffineTransform}.
 }
 \description{
 Parses an MNI transform file directly (no dependency beyond what this
@@ -35,7 +53,13 @@ handles that case too, for a single entry point regardless of content.)
 }
 \examples{
 \dontrun{
+# The default: correct for points from ReadImage_fix()-corrected images.
 xfm <- read_minc_transform("registration.xfm")
-xfm$TransformPoint(c(0, 0, 0))
+image <- ReadImage_fix("fixed_template.mnc")
+grid_df <- slice_grid(image, axis = "axial", coordinate = 0)
+warped <- transform_points(grid_df, xfm)
+
+# The transform exactly as written in the file (native-MINC convention).
+xfm_raw <- read_minc_transform("registration.xfm", corrected = FALSE)
 }
 }

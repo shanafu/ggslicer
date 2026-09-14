@@ -91,7 +91,7 @@ test_that("a raw vector image and an already-built DisplacementFieldTransform gi
   expect_equal(arrows_image_form$xend, arrows_transform_form$xend)
 })
 
-test_that("warp given as a .xfm path (Linear block) matches the equivalent Transform object", {
+test_that("warp given as a .xfm path (Linear block) matches the equivalent conjugated Transform object", {
   skip_if_not_installed("SimpleITK")
   path <- tempfile(fileext = ".xfm")
   on.exit(unlink(path))
@@ -104,9 +104,14 @@ test_that("warp given as a .xfm path (Linear block) matches the equivalent Trans
   ))
 
   image <- filled_sitk_image(c(10, 10, 3), function(idx) 0)
+  # A .xfm path routes through read_minc_transform()'s default
+  # corrected = TRUE (see transform.R), which conjugates the file's raw
+  # translation (2, -1, 0) by negating x/y: for a pure translation, this is
+  # equivalent to just negating the translation vector's x/y components,
+  # i.e. (-2, 1, 0).
   arrows_path <- slice_warp_arrows(image, axis = "axial", coordinate = 0, warp = path, spacing = 3)
 
-  t <- SimpleITK::TranslationTransform(3L, c(2, -1, 0))
+  t <- SimpleITK::TranslationTransform(3L, c(-2, 1, 0))
   arrows_transform <- slice_warp_arrows(image, axis = "axial", coordinate = 0, warp = t, spacing = 3)
 
   expect_equal(arrows_path$xend, arrows_transform$xend)

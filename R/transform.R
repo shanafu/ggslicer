@@ -33,17 +33,40 @@
 #' handles that case too, for a single entry point regardless of content.)
 #'
 #' @param path Path to a `.xfm` file.
-#' @return A `SimpleITK` transform: a single `AffineTransform` or
-#'   `DisplacementFieldTransform` if `path` has exactly one block, or a
-#'   `CompositeTransform` (applying the blocks in file order) if it has more
-#'   than one.
+#' @param corrected If `TRUE` (the default), the parsed transform is
+#'   conjugated so it operates correctly on points from
+#'   [ReadImage_fix()]-corrected images — which is what every tidy data
+#'   frame this package produces (`slice_image()`, `slice_grid()`,
+#'   `slice_contours()`, ...) actually contains. This matters because a
+#'   `.xfm` file's own matrix/displacement values are defined in MINC's
+#'   *native* coordinate convention (the same one [orientation_correction()]
+#'   corrects images out of), not the corrected one — confirmed directly: a
+#'   real registration transform applied to points from correctly-oriented
+#'   images landed on the wrong anatomical label entirely without this
+#'   conjugation, and matched exactly with it. Set `corrected = FALSE` to
+#'   get the transform exactly as written in the file (its native-MINC
+#'   form), e.g. to compare against another MINC-native tool's own
+#'   computation, or to apply it directly to points from a plainly-read
+#'   (not `ReadImage_fix()`-corrected) MINC image.
+#' @return A `SimpleITK` transform. With `corrected = FALSE`: a single
+#'   `AffineTransform` or `DisplacementFieldTransform` if `path` has exactly
+#'   one block, or a `CompositeTransform` (applying the blocks in file
+#'   order) if it has more than one. With `corrected = TRUE` (default): the
+#'   same, wrapped in an outer `CompositeTransform` that conjugates it by a
+#'   fixed x/y-negating `AffineTransform`.
 #' @examples
 #' \dontrun{
+#' # The default: correct for points from ReadImage_fix()-corrected images.
 #' xfm <- read_minc_transform("registration.xfm")
-#' xfm$TransformPoint(c(0, 0, 0))
+#' image <- ReadImage_fix("fixed_template.mnc")
+#' grid_df <- slice_grid(image, axis = "axial", coordinate = 0)
+#' warped <- transform_points(grid_df, xfm)
+#'
+#' # The transform exactly as written in the file (native-MINC convention).
+#' xfm_raw <- read_minc_transform("registration.xfm", corrected = FALSE)
 #' }
 #' @export
-read_minc_transform <- function(path) {
+read_minc_transform <- function(path, corrected = TRUE) {
   text <- paste(readLines(path, warn = FALSE), collapse = "\n")
   if (!grepl("MNI Transform File", text, fixed = TRUE)) {
     stop("`path` does not look like an MNI transform file (.xfm): ", path, call. = FALSE)
@@ -107,17 +130,43 @@ read_minc_transform <- function(path) {
   }
 
   if (length(transforms) == 1) {
-    return(transforms[[1]])
+    result <- transforms[[1]]
+  } else {
+    # File blocks are meant to apply in file order [T1, T2, ...]; SimpleITK's
+    # CompositeTransform applies the *last*-added transform first, so add them
+    # in reverse (verified with a non-commuting synthetic case; see CLAUDE.md).
+    composite <- SimpleITK::CompositeTransform(3L)
+    for (t in rev(transforms)) {
+      composite$AddTransform(t)
+    }
+    result <- composite
   }
 
-  # File blocks are meant to apply in file order [T1, T2, ...]; SimpleITK's
-  # CompositeTransform applies the *last*-added transform first, so add them
-  # in reverse (verified with a non-commuting synthetic case; see CLAUDE.md).
-  composite <- SimpleITK::CompositeTransform(3L)
-  for (t in rev(transforms)) {
-    composite$AddTransform(t)
+  if (!corrected) {
+    return(result)
   }
-  composite
+  .conjugate_minc_native_transform(result)
+}
+
+# Wrap a MINC-native-space transform T as N . T . N, where N negates x/y
+# (the same fixed operation orientation_correction() applies to image
+# headers), so it operates correctly on points from ReadImage_fix()-
+# corrected images instead of raw-MINC-native ones. N is its own inverse
+# (zero translation, diag(-1,-1,1) matrix), and CompositeTransform applies
+# the *last*-added transform first, so adding [N, T, N] computes
+# N(T(N(point))) -- verified directly against a real registration (see
+# CLAUDE.md): all 8 real anatomical labels checked land on the correct
+# target label with this conjugation, and land on the wrong one without it.
+.conjugate_minc_native_transform <- function(t) {
+  n <- SimpleITK::AffineTransform(3L)
+  n$SetMatrix(c(-1, 0, 0, 0, -1, 0, 0, 0, 1))
+  n$SetTranslation(c(0, 0, 0))
+
+  wrapped <- SimpleITK::CompositeTransform(3L)
+  wrapped$AddTransform(n)
+  wrapped$AddTransform(t)
+  wrapped$AddTransform(n)
+  wrapped
 }
 
 #' Apply a SimpleITK transform to a tidy data frame's world coordinates

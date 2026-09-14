@@ -65,7 +65,10 @@ test_that("read_minc_transform() parses a single Linear block", {
     " 0 0 1 7;"
   ))
 
-  t <- read_minc_transform(path)
+  # corrected = FALSE: this test is about the block-parsing logic itself,
+  # not the ReadImage_fix()-compatibility conjugation (see its own tests
+  # below), so check the transform exactly as written in the file.
+  t <- read_minc_transform(path, corrected = FALSE)
   expect_true(inherits(t, "_p_itk__simple__Transform"))
   out <- t$TransformPoint(c(0, 0, 0))
   expect_equal(out, c(5, 6, 7))
@@ -90,7 +93,7 @@ test_that("read_minc_transform() parses a single Grid_Transform block", {
     "Displacement_Volume = grid.mnc;"
   ))
 
-  t <- read_minc_transform(xfm_path)
+  t <- read_minc_transform(xfm_path, corrected = FALSE)
   out <- t$TransformPoint(c(0, 0, 0))
   expect_equal(out, c(1, 2, 3))
 })
@@ -119,7 +122,7 @@ test_that("read_minc_transform() concatenates multiple blocks in the correct ord
     "Displacement_Volume = grid.mnc;"
   ))
 
-  t <- read_minc_transform(xfm_path)
+  t <- read_minc_transform(xfm_path, corrected = FALSE)
   expect_true(inherits(t, "_p_itk__simple__CompositeTransform"))
 
   # file order [Linear, Grid]: apply linear (scale by 2) first, then grid (+100 in x)
@@ -142,7 +145,7 @@ test_that("read_minc_transform() resolves Displacement_Volume relative to the .x
     "Displacement_Volume = somegrid.mnc;"
   ))
 
-  expect_no_error(read_minc_transform(xfm_path))
+  expect_no_error(read_minc_transform(xfm_path, corrected = FALSE))
 })
 
 test_that("read_minc_transform() errors clearly on malformed or unsupported input", {
@@ -163,7 +166,7 @@ test_that("read_minc_transform() errors clearly on malformed or unsupported inpu
   expect_error(read_minc_transform(unsupported), "Unsupported")
 })
 
-test_that("transform_points() routes .xfm paths through read_minc_transform()", {
+test_that("transform_points() routes .xfm paths through read_minc_transform(), applying the default conjugation", {
   skip_if_not_installed("SimpleITK")
   path <- tempfile(fileext = ".xfm")
   on.exit(unlink(path))
@@ -175,7 +178,72 @@ test_that("transform_points() routes .xfm paths through read_minc_transform()", 
     " 0 0 1 3;"
   ))
 
+  # transform_points()/.read_transform_file() call read_minc_transform(path)
+  # with its default corrected = TRUE, so the result is conjugated: for
+  # point (0,0,0), N(T_raw(N(0,0,0))) = N(T_raw(0,0,0)) = N(1,2,3) = (-1,-2,3)
+  # (N negates x/y only -- see .conjugate_minc_native_transform()).
   df <- tibble::tibble(x = 0, y = 0, z = 0)
   out <- transform_points(df, path)
-  expect_equal(c(out$x, out$y, out$z), c(1, 2, 3))
+  expect_equal(c(out$x, out$y, out$z), c(-1, -2, 3))
+})
+
+# --- read_minc_transform()'s corrected= conjugation ---
+
+test_that("read_minc_transform()'s default (corrected = TRUE) conjugates by negating x/y around the raw transform", {
+  skip_if_not_installed("SimpleITK")
+  path <- tempfile(fileext = ".xfm")
+  on.exit(unlink(path))
+  write_test_xfm(path, c(
+    "Transform_Type = Linear;",
+    "Linear_Transform =",
+    " 1 0 0 1",
+    " 0 1 0 2",
+    " 0 0 1 3;"
+  ))
+
+  t_raw <- read_minc_transform(path, corrected = FALSE)
+  t_corrected <- read_minc_transform(path) # default TRUE
+
+  p <- c(4, 5, 6)
+  n_p <- c(-p[1], -p[2], p[3])
+  raw_result <- t_raw$TransformPoint(n_p)
+  expected <- c(-raw_result[1], -raw_result[2], raw_result[3])
+
+  expect_equal(t_corrected$TransformPoint(p), expected)
+  # z is never touched by the conjugation
+  expect_equal(t_corrected$TransformPoint(c(0, 0, 9))[3], t_raw$TransformPoint(c(0, 0, 9))[3])
+})
+
+test_that("read_minc_transform()'s conjugation is applied consistently for a multi-block (Linear + Grid_Transform) file", {
+  skip_if_not_installed("SimpleITK")
+  tmpdir <- tempfile()
+  dir.create(tmpdir)
+  on.exit(unlink(tmpdir, recursive = TRUE))
+
+  grid_path <- file.path(tmpdir, "grid.mnc")
+  vec_img <- SimpleITK::Image(as.integer(c(3, 3, 3)), "sitkVectorFloat64", 3L)
+  for (i in 0:2) for (j in 0:2) for (k in 0:2) {
+    vec_img$SetPixel(c(i, j, k), c(10, 20, 30))
+  }
+  SimpleITK::WriteImage(vec_img, grid_path)
+
+  xfm_path <- file.path(tmpdir, "test.xfm")
+  write_test_xfm(xfm_path, c(
+    "Transform_Type = Linear;",
+    "Linear_Transform =",
+    " 1 0 0 1",
+    " 0 1 0 2",
+    " 0 0 1 3;",
+    "Transform_Type = Grid_Transform;",
+    "Displacement_Volume = grid.mnc;"
+  ))
+
+  t_raw <- read_minc_transform(xfm_path, corrected = FALSE)
+  t_corrected <- read_minc_transform(xfm_path)
+
+  p <- c(0.5, 0.5, 0.5)
+  n_p <- c(-p[1], -p[2], p[3])
+  raw_result <- t_raw$TransformPoint(n_p)
+  expected <- c(-raw_result[1], -raw_result[2], raw_result[3])
+  expect_equal(t_corrected$TransformPoint(p), expected)
 })

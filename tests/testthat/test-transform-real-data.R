@@ -47,7 +47,9 @@ test_that("read_minc_transform() on a real single-block affine .xfm matches Simp
   m5 <- file.path(testdata_dir(), "mouse_5")
   path <- file.path(m5, "affine", "MICe_DSURQE_affine.xfm")
 
-  via_parser <- read_minc_transform(path)
+  # corrected = FALSE: comparing the raw parser's output against
+  # SimpleITK::ReadTransform()'s own (also raw, unconjugated) parsing.
+  via_parser <- read_minc_transform(path, corrected = FALSE)
   via_read_transform <- SimpleITK::ReadTransform(path)
 
   expect_equal(via_parser$GetParameters(), via_read_transform$GetParameters(), tolerance = 1e-8)

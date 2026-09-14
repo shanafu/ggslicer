@@ -17,28 +17,23 @@ WriteImage_fix(image, output_file)
 \description{
 Writes \code{image} via \code{SimpleITK::WriteImage()}. If \code{image} was originally
 read from a MINC file (tracked via the \code{OriginalFileType} metadata
-\code{\link[=ReadImage_fix]{ReadImage_fix()}} sets), the \code{\link[=orientation_correction]{orientation_correction()}} applied on read is
-undone before writing: fully (re-flipping) if the output is also MINC, or
-by restoring the original MINC direction matrix (from the
-\code{OriginalDirection} metadata) for any other output format. Images not
-originally read as MINC are written unchanged.
-
-Note a real, pre-existing cross-language inconsistency, not addressed
-here: the Python package's \code{WriteImage_fix()} only restores the original
-direction for \code{.nii} output specifically (not \code{.nii.gz} or other non-MINC
-formats), and hardcodes a generic RAS direction matrix rather than
-restoring the image's actual original one. Left as-is pending a
-deliberate decision to reconcile the two (a behavior change, not a pure
-reorganization).
+\code{\link[=ReadImage_fix]{ReadImage_fix()}} sets) and \code{output_file} is also MINC, the
+\code{\link[=orientation_correction]{orientation_correction()}} applied on read is undone (it is its own
+inverse) before writing, so the output MINC file's header matches what a
+native MINC reader expects. For any other output format, \code{image}'s
+current (corrected) header is already the anatomically correct one to
+write — no restoration is needed, unlike previous versions of this
+function (see \code{CLAUDE.md}). Images not originally read as MINC are always
+written unchanged.
 }
 \examples{
 \dontrun{
 image <- ReadImage_fix("brain_image.mnc")
 
-# MINC -> MINC: re-flipped back to proper MINC orientation before writing.
+# MINC -> MINC: re-corrected back to proper MINC orientation before writing.
 WriteImage_fix(image, "output.mnc")
 
-# MINC -> NIfTI: original MINC direction matrix restored before writing.
+# MINC -> NIfTI: already has the correct header; written as-is.
 WriteImage_fix(image, "output.nii")
 }
 }
