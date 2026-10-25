@@ -124,7 +124,7 @@ Every function below is exported. Use `?function_name` for full documentation.
 
 ### Classes (R6)
 
-You usually don't need these, since `slice_image()` builds them for you, but they enable oblique slices and custom stacks. A bare `SliceGeometry` can be used anywhere a `SlicePackage` is expected.
+You usually don't need these unless you want to visualize oblique slices and custom stacks. A bare `SliceGeometry` can be used anywhere a `SlicePackage` is expected.
 
 | Class | Description |
 |---|---|
