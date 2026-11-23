@@ -27,11 +27,11 @@ jobs:
             frozen: true
             hash_file: uvr.lock
           - os: macos-latest
-            r: "4.6.2"
+            r: "4.6.1"
             frozen: true
             hash_file: uvr.lock
           - os: windows-latest
-            r: "4.6.2"
+            r: "4.6.1"
             frozen: true
             hash_file: uvr.lock
           - os: ubuntu-latest
