@@ -25,21 +25,25 @@ jobs:
           - os: ubuntu-latest
             r: "4.6.2"
             frozen: true
+            hash_file: uvr.lock
           - os: macos-latest
             r: "4.6.2"
             frozen: true
+            hash_file: uvr.lock
           - os: windows-latest
             r: "4.6.2"
             frozen: true
+            hash_file: uvr.lock
           - os: ubuntu-latest
             r: "4.5.3"
             frozen: false
+            hash_file: uvr.toml
           - os: ubuntu-latest
             r: "4.4.3"
             frozen: false
+            hash_file: uvr.toml
 
     env:
-      GGSLICER_CHECK_DIR: ${{ runner.temp }}/rcmdcheck
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       NO_COLOR: "1"
       R_KEEP_PKG_SOURCE: "yes"
@@ -74,7 +78,7 @@ jobs:
             ~/.uvr/r-versions/${{ matrix.r }}
             ~/.uvr/cache
             .uvr/library
-          key: uvr-${{ runner.os }}-${{ runner.arch }}-r${{ matrix.r }}-sitk2.5.7-${{ matrix.frozen && hashFiles('uvr.lock', '.github/scripts/install_simpleitk.R') || hashFiles('uvr.toml', '.github/scripts/install_simpleitk.R') }}
+          key: uvr-${{ runner.os }}-${{ runner.arch }}-r${{ matrix.r }}-sitk2.5.7-${{ hashFiles(matrix.hash_file, '.github/scripts/install_simpleitk.R') }}
           restore-keys: |
             uvr-${{ runner.os }}-${{ runner.arch }}-r${{ matrix.r }}-sitk2.5.7-
             uvr-${{ runner.os }}-${{ runner.arch }}-r${{ matrix.r }}-
@@ -99,6 +103,8 @@ jobs:
         run: uvr run --unattended .github/scripts/install_simpleitk.R
 
       - name: Run R CMD check
+        env:
+          GGSLICER_CHECK_DIR: ${{ runner.temp }}/rcmdcheck
         run: uvr run --unattended .github/scripts/check_package.R
 
       - name: Upload check logs on failure
