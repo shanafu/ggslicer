@@ -1,0 +1,110 @@
+name: R-CMD-check
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  check:
+    name: ${{ matrix.os }} (R ${{ matrix.r }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            r: "4.6.2"
+            frozen: true
+          - os: macos-latest
+            r: "4.6.2"
+            frozen: true
+          - os: windows-latest
+            r: "4.6.2"
+            frozen: true
+          - os: ubuntu-latest
+            r: "4.5.3"
+            frozen: false
+          - os: ubuntu-latest
+            r: "4.4.3"
+            frozen: false
+
+    env:
+      GGSLICER_CHECK_DIR: ${{ runner.temp }}/rcmdcheck
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      NO_COLOR: "1"
+      R_KEEP_PKG_SOURCE: "yes"
+      SIMPLEITK_VERSION: "2.5.7"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uvr (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/nbafrank/uvr/main/install.sh | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Install uvr (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          irm https://raw.githubusercontent.com/nbafrank/uvr/main/install.ps1 | iex
+          Add-Content -Path $env:GITHUB_PATH -Value "$env:USERPROFILE\.local\bin"
+
+      - name: Cache uvr R and package library
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.uvr/r-versions/${{ matrix.r }}
+            ~/.uvr/cache
+            .uvr/library
+          key: uvr-${{ runner.os }}-${{ runner.arch }}-r${{ matrix.r }}-sitk2.5.7-${{ matrix.frozen && hashFiles('uvr.lock', '.github/scripts/install_simpleitk.R') || hashFiles('uvr.toml', '.github/scripts/install_simpleitk.R') }}
+          restore-keys: |
+            uvr-${{ runner.os }}-${{ runner.arch }}-r${{ matrix.r }}-sitk2.5.7-
+            uvr-${{ runner.os }}-${{ runner.arch }}-r${{ matrix.r }}-
+
+      - name: Install R via uvr
+        run: uvr r install ${{ matrix.r }} --unattended
+
+      - name: Pin R version for matrix job
+        run: uvr r pin ${{ matrix.r }} --unattended
+
+      - name: Sync locked dependencies via uvr
+        if: matrix.frozen
+        run: uvr sync --frozen --unattended
+
+      - name: Resolve and sync dependencies for older R
+        if: ${{ !matrix.frozen }}
+        run: |
+          uvr lock --unattended
+          uvr sync --unattended
+
+      - name: Install SimpleITK pre-built binary
+        run: uvr run --unattended .github/scripts/install_simpleitk.R
+
+      - name: Run R CMD check
+        run: uvr run --unattended .github/scripts/check_package.R
+
+      - name: Upload check logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rcmdcheck-${{ matrix.os }}-r${{ matrix.r }}
+          path: ${{ runner.temp }}/rcmdcheck
+          if-no-files-found: ignore
