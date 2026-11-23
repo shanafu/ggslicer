@@ -4,3 +4,9 @@
 ^README\.Rmd$
 ^\.positai$
 ^\.claude$
+^\.github$
+^uvr\.toml$
+^uvr\.lock$
+^\.uvr$
+^\.r-version$
+^\.Rprofile$

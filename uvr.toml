@@ -1,0 +1,21 @@
+[project]
+name = "ggslicer"
+description = "Prepare Volumetric Imaging Data"
+r_version = ">=4.4.0"
+
+[dependencies]
+R6 = "*"
+dplyr = "*"
+ggplot2 = "*"
+grDevices = "*"
+grid = "*"
+magrittr = "*"
+pbapply = "*"
+rlang = "*"
+stats = "*"
+tibble = "*"
+tools = "*"
+
+[dev-dependencies]
+rcmdcheck = "*"
+testthat = ">=3.0.0"
